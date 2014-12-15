@@ -10,7 +10,7 @@ public class Event<T>
      */
     public T context;
     /**
-     * handled was passed to the listeners to aware if it is handled, aka. avoiding handling redundantly.
+     * handled was passed to the listeners to aware if it is handled, i.e. avoiding handling redundantly.
      */
     public boolean handled;
 
