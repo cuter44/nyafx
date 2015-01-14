@@ -9,7 +9,14 @@ public class ListenerList<T> extends Vector<EventSink<T>>
     public boolean dispatch(Event<T> ev)
     {
         for (EventSink<T> sink:this)
-            sink.dispatch(ev);
+            try
+            {
+                sink.dispatch(ev);
+            }
+            catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
 
         return(true);
     }

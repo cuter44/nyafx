@@ -54,13 +54,13 @@ public class CryptoBase
 
     private static class Singleton
     {
-        public static final CryptoBase INSTANCE = new CryptoBase();
+        public static CryptoBase instance = new CryptoBase();
     }
 
     public static CryptoBase getInstance()
     {
         return(
-            Singleton.INSTANCE
+            Singleton.instance
         );
     }
 

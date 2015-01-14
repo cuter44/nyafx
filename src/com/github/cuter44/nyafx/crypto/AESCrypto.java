@@ -103,13 +103,13 @@ public class AESCrypto extends CryptoBase
 
     private static class Singleton
     {
-        public static final AESCrypto INSTANCE = new AESCrypto();
+        public static AESCrypto instance = new AESCrypto();
     }
 
     public static AESCrypto getInstance()
     {
         return(
-            Singleton.INSTANCE
+            Singleton.instance
         );
     }
 

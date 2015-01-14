@@ -40,7 +40,7 @@ public class HibernateSessionFactoryWrap
   // SINGLETON
     private static class Singleton
     {
-        public static final HibernateSessionFactoryWrap INSTANCE =
+        public static HibernateSessionFactoryWrap instance =
             new HibernateSessionFactoryWrap(
                 HibernateSessionFactoryWrap.DEFAULTS
             );
@@ -48,7 +48,7 @@ public class HibernateSessionFactoryWrap
 
     public static HibernateSessionFactoryWrap getInstance()
     {
-        return(Singleton.INSTANCE);
+        return(Singleton.instance);
     }
 
   // SESSION

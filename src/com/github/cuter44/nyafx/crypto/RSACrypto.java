@@ -109,13 +109,13 @@ public class RSACrypto extends CryptoBase
 
     private static class Singleton
     {
-        public static final RSACrypto INSTANCE = new RSACrypto();
+        public static RSACrypto instance = new RSACrypto();
     }
 
     public static RSACrypto getInstance()
     {
         return(
-            Singleton.INSTANCE
+            Singleton.instance
         );
     }
 
@@ -135,8 +135,8 @@ public class RSACrypto extends CryptoBase
             return((RSAPublicKey)
                 this.keyFac.generatePublic(
                     new RSAPublicKeySpec(
-                        new BigInteger(m),
-                        new BigInteger(e)
+                        new BigInteger(1, m),
+                        new BigInteger(1, e)
                     )
                 )
             );
@@ -154,8 +154,8 @@ public class RSACrypto extends CryptoBase
             return((RSAPrivateKey)
                 this.keyFac.generatePublic(
                     new RSAPrivateKeySpec(
-                        new BigInteger(m),
-                        new BigInteger(d)
+                        new BigInteger(1, m),
+                        new BigInteger(1, d)
                     )
                 )
             );

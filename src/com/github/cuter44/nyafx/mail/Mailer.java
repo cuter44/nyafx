@@ -96,12 +96,12 @@ public class Mailer
   // SINGLETON
     private static class Singleton
     {
-        public static final Mailer INSTANCE = new Mailer();
+        public static Mailer instance = new Mailer();
     }
 
     public static Mailer getInstance()
     {
-        return(Singleton.INSTANCE);
+        return(Singleton.instance);
     }
 
   // MESSAGE

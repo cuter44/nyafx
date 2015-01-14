@@ -14,9 +14,10 @@ public class URLParser
     protected static final byte TYPE_QUERY_STRING = 2;
 
     protected String url;
+    protected String baseUrl;
     protected String queryString;
+    protected String label;
     protected String charset = "utf-8";
-
 
     protected boolean compiled = false;
     protected Map<String, String> parsedParams;
@@ -36,7 +37,11 @@ public class URLParser
         parser.url = url;
 
         String[] split = url.split("\\?", 2);
+        parser.baseUrl = split[0];
         parser.queryString = split.length>1?split[1]:"";
+
+        String[] split2 = url.split("#", 2);
+        parser.label = split2.length>1?split2[1]:null;
 
         return(parser);
     }
@@ -63,6 +68,9 @@ public class URLParser
     public URLParser compile()
         throws UnsupportedEncodingException
     {
+        if (this.compiled)
+            return(this);
+
         String paramString = this.queryString.split("#")[0];
         String[] params = paramString.split("&");
 
@@ -91,7 +99,39 @@ public class URLParser
         return(match.group(2));
     }
 
+    public URLParser setParameter(String name, String value)
+        throws UnsupportedEncodingException
+    {
+        if (!this.compiled)
+            this.compile();
 
+        this.parsedParams.put(name, value);
+
+        return(this);
+    }
+
+    /**
+     * Rebuilt the URL using the stored info, including the modification.
+     */
+    public String toURL()
+        throws UnsupportedEncodingException
+    {
+        if (!this.compiled)
+            this.compile();
+
+        URLBuilder builder = new URLBuilder();
+
+        if (this.type == TYPE_URL)
+            builder.appendPath(this.baseUrl);
+
+        for (String k:this.parsedParams.keySet())
+            builder.appendParamEncode(k, this.parsedParams.get(k), this.charset);
+
+        if (this.label != null)
+            builder.appendLabel(this.label);
+
+        return(builder.toString());
+    }
 
     public static void main(String[] args)
     {
@@ -107,6 +147,13 @@ public class URLParser
                     "https://www.google.com/search?q=test&hl=zh_cn&oq=test&gs_l=heirloom-serp.3...38011332.38012012.0.38012235.4.4.0.0.0.0.0.0..0.0.msedr...0...1ac.1.34.heirloom-serp..4.0.0.1q6YK2r8vHI"
                 ).compile()
                 .getParameter("q")
+            );
+            System.out.println(
+                URLParser.fromURL(
+                    "https://www.google.com/search?q=test&hl=zh_cn&oq=test&gs_l=heirloom-serp.3...38011332.38012012.0.38012235.4.4.0.0.0.0.0.0..0.0.msedr...0...1ac.1.34.heirloom-serp..4.0.0.1q6YK2r8vHI#test-label"
+                ).compile()
+                .setParameter("q", "tweaked")
+                .toURL()
             );
         }
         catch (Exception ex)

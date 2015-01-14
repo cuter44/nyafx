@@ -19,7 +19,7 @@
   <property name="dtlibdir" value="lib" />
   <property name="javadocdir" value="javadoc" />
   <property name="destdir" value="bin" />
-  <property name="version" value="2.2.0" />
+  <property name="version" value="2.5.0" />
 
   <path id="classpath">
     <!-- lib 存放开发及测试用库 -->
@@ -66,15 +66,30 @@
     <antcall target="build" />
   </target>
 
-  <target name="jar" description="生成jar">
+  <!-- jar -->
+  <target name="jar" description="生成 nyafx.jar">
     <antcall target="build-all"/>
     <jar destfile="${ant.project.name}-${version}.jar" basedir="${destdir}" />
   </target>
 
-  <target name="jar-text" description="生成jar">
+  <target name="jar-text" description="生成 nyafx-text.jar">
     <antcall target="build-all"/>
     <jar destfile="${ant.project.name}-text-${version}.jar" basedir="${destdir}">
       <fileset dir="${destdir}/com/github/cuter44/nyafx/text" />
+    </jar>
+  </target>
+
+  <target name="jar-crypto" description="生成 nyafx-crypto.jar">
+    <antcall target="build-all"/>
+    <jar destfile="${ant.project.name}-crypto-${version}.jar" basedir="${destdir}">
+      <fileset dir="${destdir}/com/github/cuter44/nyafx/crypto" />
+    </jar>
+  </target>
+
+  <target name="jar-servlet" description="生成 nyafx-servlet.jar">
+    <antcall target="build-all"/>
+    <jar destfile="${ant.project.name}-servlet-${version}.jar" basedir="${destdir}">
+      <fileset dir="${destdir}/com/github/cuter44/nyafx/servlet" />
     </jar>
   </target>
 
