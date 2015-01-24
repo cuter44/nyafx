@@ -12,8 +12,9 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Cipher;
 
 
-/** Encapulated Java Security Framework (JSF)
+/** Encapulated Java Cryptography Architecture endpoints
  * <br />
+ * 提供 AES 的简便封装
  *
  * @version 2.1.0-build.20141022
  */
@@ -39,6 +40,9 @@ public class AESCrypto extends CryptoBase
     //protected SecretKeyFactory keyFac;
     protected String algorithm;
 
+    /** 设定密钥长度
+     * AES的密钥长度必需为 128
+     */
     public void setKeyLength(Integer keyLength)
     {
         try
@@ -57,6 +61,8 @@ public class AESCrypto extends CryptoBase
         return;
     }
 
+    /** 设定块密码的工作模式和填充, 可选的算法视乎使用的加密提供库, jdk 提供的 JCA 库由上面的静态常量列出
+     */
     public void setAlgorithm(String newAlgorithm)
     {
         this.algorithm = newAlgorithm!=null?newAlgorithm:DEFAULT_ALGORITHM;
@@ -114,6 +120,8 @@ public class AESCrypto extends CryptoBase
     }
 
   // KEY
+    /** 随机生成一个 AES 密钥
+     */
     public SecretKey generateKey()
     {
         return(
@@ -121,6 +129,8 @@ public class AESCrypto extends CryptoBase
         );
     }
 
+    /** 从给定的字节数组构建 AES 密钥
+     */
     public SecretKey generateKey(byte[] k)
     {
         return(
@@ -128,7 +138,7 @@ public class AESCrypto extends CryptoBase
         );
     }
 
-    /** not guaranteed to work...
+    /** 从给定的 AES 密钥析出字节数组
      */
     public byte[] extractKey(SecretKey key)
     {
@@ -150,6 +160,8 @@ public class AESCrypto extends CryptoBase
     }
 
   // CRYPTO
+    /** 使用给定的密钥加密字节流
+     */
     public byte[] encrypt(byte[] in, SecretKey key)
     {
         if (in == null)
@@ -172,6 +184,8 @@ public class AESCrypto extends CryptoBase
         }
     }
 
+    /** 使用给定的密钥解密字节流
+     */
     public byte[] decrypt(byte[] in, SecretKey key)
     {
         if (in == null)

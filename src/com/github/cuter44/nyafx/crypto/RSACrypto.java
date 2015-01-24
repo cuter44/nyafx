@@ -18,10 +18,11 @@ import java.security.spec.InvalidKeySpecException;
 import javax.crypto.Cipher;
 
 
-/** Encapulated Java Security Framework (JSF)
+/** Encapulated Java Cryptography Architecture endpoints
  * <br />
+ * 提供 RSA 的简便封装
  *
- * @version 2.1.0-build.20141022
+ * @version 2.5.0-build20150121
  */
 public class RSACrypto extends CryptoBase
 {
@@ -44,6 +45,8 @@ public class RSACrypto extends CryptoBase
     protected KeyFactory keyFac;
     protected String algorithm;
 
+    /** 设定密钥长度
+     */
     public void setKeyLength(Integer keyLength)
     {
         try
@@ -63,6 +66,8 @@ public class RSACrypto extends CryptoBase
         return;
     }
 
+    /** 设定块密码的工作模式和填充, 可选的算法视乎使用的加密提供库, jdk 提供的 JCA 库由上面的静态常量列出
+     */
     public void setAlgorithm(String newAlgorithm)
     {
         this.algorithm = newAlgorithm!=null?newAlgorithm:DEFAULT_ALGORITHM;
@@ -120,7 +125,8 @@ public class RSACrypto extends CryptoBase
     }
 
   // KEY
-
+    /** 随机生成用于 RSA 的密钥对
+     */
     public KeyPair generateKey()
     {
         return(
@@ -128,6 +134,8 @@ public class RSACrypto extends CryptoBase
         );
     }
 
+    /** 利用参数 m(modulus) 和 e(public exponent) 构造公钥
+     */
     public RSAPublicKey generatePublic(byte[] m, byte[] e)
     {
         try
@@ -147,6 +155,8 @@ public class RSACrypto extends CryptoBase
         }
     }
 
+    /** 利用参数 m(modulus) 和 d(private exponent) 构造私钥
+     */
     public RSAPrivateKey generatePrivate(byte[] m, byte[] d)
     {
         try
@@ -167,6 +177,8 @@ public class RSACrypto extends CryptoBase
     }
 
   // CRYPTO
+    /** 使用给定的公钥加密字节流
+     */
     public byte[] encrypt(byte[] in, PublicKey key)
     {
         if (in == null)
@@ -189,6 +201,8 @@ public class RSACrypto extends CryptoBase
         }
     }
 
+    /** 使用给定的私钥解密字节流
+     */
     public byte[] decrypt(byte[] in, PrivateKey key)
     {
         if (in == null)

@@ -13,7 +13,7 @@ public class HibernateSessionFactoryWrap
   // CONSTRUCT
     public static final String DEFAULTS = "/hibernate.cfg.xml";
 
-    private SessionFactory sf;
+    protected SessionFactory sf;
 
     public HibernateSessionFactoryWrap(String resConf)
     {
@@ -59,11 +59,11 @@ public class HibernateSessionFactoryWrap
         );
     }
 
-    private ThreadLocal<Session> threadLocal = new ThreadLocal<Session>()
-        {
-            @Override
-            protected Session initialValue() { return(HibernateSessionFactoryWrap.this.sf.openSession()); }
-        };
+    protected ThreadLocal<Session> threadLocal = new ThreadLocal<Session>()
+    {
+        @Override
+        protected Session initialValue() { return(HibernateSessionFactoryWrap.this.sf.openSession()); }
+    };
 
     /** returns ThreadLocal session
      */
@@ -73,5 +73,4 @@ public class HibernateSessionFactoryWrap
             this.threadLocal
         );
     }
-
 }
