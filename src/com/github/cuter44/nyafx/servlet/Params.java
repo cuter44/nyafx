@@ -2,6 +2,7 @@ package com.github.cuter44.nyafx.servlet;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Iterator;
@@ -307,29 +308,33 @@ public class Params
         return(value);
     }
 
-    public static List<String> getStringList(HttpServletRequest req, String name)
+
+
+    public static String[] getStringArray(HttpServletRequest req, String name)
     {
         try
         {
             String v = get(req, name);
             if (v == null)
                 return(null);
-            if (v.length() == 0)
-                return(new ArrayList<String>());
 
-            StringTokenizer st = new StringTokenizer(v, ",");
-            List<String> l = new ArrayList<String>(st.countTokens());
+            String[] sa = v.split(",");
 
-            while (st.hasMoreTokens())
-                l.add(st.nextToken());
-
-            return(l);
+            return(sa);
         }
         catch (Exception ex)
         {
             ex.printStackTrace();
             return(null);
         }
+    }
+
+    public static List<String> getStringList(HttpServletRequest req, String name)
+    {
+        String[] sa = getStringArray(req, name);
+        return(
+            sa != null ? Arrays.asList(sa) : null
+        );
     }
 
     public static List<String> needStringList(HttpServletRequest req, String name)
@@ -346,14 +351,15 @@ public class Params
     {
         try
         {
-            List<String> ls = getStringList(req, name);
-            if (ls == null)
+            String[] sa = getStringArray(req, name);
+            if (sa == null)
                 return(null);
 
-            List<Long> l = new ArrayList<Long>();
-            Iterator<String> i = ls.iterator();
-            while (i.hasNext())
-                l.add(Long.valueOf(i.next()));
+            List<Long> l = new ArrayList<Long>(sa.length);
+            for (int i=0; i<sa.length; i++)
+                l.add(
+                    sa[i].isEmpty() ? null : Long.valueOf(sa[i])
+                );
 
             return(l);
         }
@@ -372,5 +378,73 @@ public class Params
 
         return(value);
     }
+
+    public static Double[] getDoubleArray(HttpServletRequest req, String name)
+    {
+        try
+        {
+            String[] sa = getStringArray(req, name);
+            if (sa == null)
+                return(null);
+
+            Double[] da = new Double[sa.length];
+            for (int i=0; i<sa.length; i++)
+                da[i] = sa[i].isEmpty() ? null : Double.valueOf(sa[i]);
+
+            return(da);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            return(null);
+        }
+    }
+
+    public static List<Double> getDoubleList(HttpServletRequest req, String name)
+    {
+        Double[] da = getDoubleArray(req, name);
+        return(
+            da != null ? Arrays.asList(da) : null
+        );
+    }
+
+    public static Date[] getDateArray(HttpServletRequest req, String name)
+    {
+        try
+        {
+            String[] sa = getStringArray(req, name);
+            if (sa == null)
+                return(null);
+
+            Date[] da = new Date[sa.length];
+            for (int i=0; i<sa.length; i++)
+                da[i] = sa[i].isEmpty() ? null : new Date(Long.valueOf(sa[i]));
+
+            return(da);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            return(null);
+        }
+    }
+
+    public static List<Date> getDateList(HttpServletRequest req, String name)
+    {
+        Date[] da = getDateArray(req, name);
+        return(
+            da != null ? Arrays.asList(da) : null
+        );
+    }
+
+    public static List<Date> needDateList(HttpServletRequest req, String name)
+    {
+        List<Date> value = getDateList(req, name);
+        if (value == null)
+            throw(new MissingParameterException("Required float parameter/cookies/attribute but not found:"+name));
+
+        return(value);
+    }
+
 
 }

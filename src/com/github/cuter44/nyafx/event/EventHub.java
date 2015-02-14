@@ -26,7 +26,16 @@ public class EventHub
     }
 
   // LISTENER
+    @Deprecated
+    /**
+     * Use subscribe() instead.
+     */
     public void addListener(String eventType, EventSink l)
+    {
+        this.subscribe(eventType, l);
+    }
+
+    public void subscribe(String eventType, EventSink l)
     {
         synchronized(this.listenerMap)
         {

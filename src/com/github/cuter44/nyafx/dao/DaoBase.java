@@ -15,15 +15,15 @@ public abstract class DaoBase<T>
 {
   // CONSTRUCT
     protected HibernateSessionFactoryWrap factory;
-
-    /** shortcut
-     */
+    protected ThreadLocal<Boolean> closed;
     protected ThreadLocal<Session> thisSession;
 
     public DaoBase()
     {
         this.factory = HibernateSessionFactoryWrap.getInstance();
         this.thisSession = this.factory.getThreadLocal();
+        this.closed = new ThreadLocal<Boolean>();
+        this.closed.set(Boolean.TRUE);
 
         return;
     }
@@ -49,6 +49,8 @@ public abstract class DaoBase<T>
             this.thisSession.set(s=this.factory.openSession());
         if (!s.getTransaction().isActive())
             s.beginTransaction();
+
+        this.closed.set(Boolean.FALSE);
 
         return;
     }
@@ -93,9 +95,14 @@ public abstract class DaoBase<T>
      */
     public void close()
     {
-        this.thisSession.get()
-            .close();
-        this.thisSession.remove();
+        if (Boolean.FALSE.equals(this.closed))
+        {
+            this.thisSession.get()
+                .close();
+            this.thisSession.remove();
+
+            this.closed.set(Boolean.TRUE);
+        }
 
         return;
     }
