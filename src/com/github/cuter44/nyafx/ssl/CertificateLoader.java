@@ -137,6 +137,19 @@ public class CertificateLoader
         return(tmFactory.getTrustManagers());
     }
 
+    public SSLContext asSSLContext(String algorithm)
+        throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException, CertificateException
+    {
+        SSLContext sslCtx = SSLContext.getInstance(algorithm);
+        sslCtx.init(
+            null,
+            this.asTrustManagers(),
+            null
+        );
+
+        return(sslCtx);
+    }
+
     /**
      * Noticed that this function will override system default certificates loaded from $JAVA_HOME/lib/security/jssecacerts or $JAVA_HOME/lib/security/cacerts
      * To include them, you must call loadSystemDefault() (which is not implemented yet) before calling this function.
@@ -152,14 +165,7 @@ public class CertificateLoader
     public CertificateLoader overrideDefaultSSLContext(String algorithm)
         throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException, CertificateException
     {
-        SSLContext sslCtx = SSLContext.getInstance(algorithm);
-        sslCtx.init(
-            null,
-            this.asTrustManagers(),
-            null
-        );
-
-        SSLContext.setDefault(sslCtx);
+        SSLContext.setDefault(this.asSSLContext(algorithm));
 
         return(this);
     }

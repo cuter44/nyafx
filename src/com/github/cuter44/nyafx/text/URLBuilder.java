@@ -90,6 +90,9 @@ public class URLBuilder
         if (path == null)
             return(this);
 
+        if (this.hasPath || !this.firstParam)
+            throw(new IllegalStateException("Missed the trick to set path."));
+
         this.hasPath = true;
 
         this.builder.append(path);

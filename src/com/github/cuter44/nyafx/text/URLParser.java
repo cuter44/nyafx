@@ -20,7 +20,7 @@ public class URLParser
     protected String charset = "utf-8";
 
     protected boolean compiled = false;
-    protected Map<String, String> parsedParams;
+    public Map<String, String> parsedParams;
 
     protected URLDecoder urld = new URLDecoder();
 

@@ -89,6 +89,27 @@ public class CryptoBase
         }
     }
 
+    /** 计算字节流 in 的 SHA-1
+     * 通常需要用 bytesToHex 转换为可读的字符串
+     */
+    public byte[] SHA1Digest(byte[] in)
+    {
+        try
+        {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+
+            byte[] out = md.digest(in);
+
+            return(out);
+        }
+        catch (NoSuchAlgorithmException ex)
+        {
+            // never occur
+            ex.printStackTrace();
+            return(null);
+        }
+    }
+
   // BASE64
     /** 转换字节流 in 为 base64 编码
      */
