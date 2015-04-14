@@ -6,6 +6,7 @@ import java.io.*;
 
 import org.hibernate.*;
 import org.hibernate.criterion.*;
+import org.hibernate.metadata.*;
 import org.hibernate.exception.ConstraintViolationException;
 import static com.github.cuter44.nyafx.dao.EntityNotFoundException.entFound;
 
@@ -15,15 +16,15 @@ public abstract class DaoBase<T>
 {
   // CONSTRUCT
     protected HibernateSessionFactoryWrap factory;
-    protected ThreadLocal<Boolean> closed;
+
+    /** shortcut
+     */
     protected ThreadLocal<Session> thisSession;
 
     public DaoBase()
     {
         this.factory = HibernateSessionFactoryWrap.getInstance();
         this.thisSession = this.factory.getThreadLocal();
-        this.closed = new ThreadLocal<Boolean>();
-        this.closed.set(Boolean.TRUE);
 
         return;
     }
@@ -49,8 +50,6 @@ public abstract class DaoBase<T>
             this.thisSession.set(s=this.factory.openSession());
         if (!s.getTransaction().isActive())
             s.beginTransaction();
-
-        this.closed.set(Boolean.FALSE);
 
         return;
     }
@@ -95,14 +94,9 @@ public abstract class DaoBase<T>
      */
     public void close()
     {
-        if (Boolean.FALSE.equals(this.closed))
-        {
-            this.thisSession.get()
-                .close();
-            this.thisSession.remove();
-
-            this.closed.set(Boolean.TRUE);
-        }
+        this.thisSession.get()
+            .close();
+        this.thisSession.remove();
 
         return;
     }
@@ -250,6 +244,20 @@ public abstract class DaoBase<T>
     {
         return(
             this.thisSession.get()
+        );
+    }
+
+    public SessionFactory getSessionFactory()
+    {
+        return(
+            this.factory.getSessionFactory()
+        );
+    }
+
+    public ClassMetadata getClassMetadata(Class clazz)
+    {
+        return(
+            this.factory.getClassMetadata(clazz)
         );
     }
 }

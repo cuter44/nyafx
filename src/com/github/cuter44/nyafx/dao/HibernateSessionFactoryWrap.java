@@ -1,6 +1,7 @@
 package com.github.cuter44.nyafx.dao;
 
 import org.hibernate.*;
+import org.hibernate.metadata.*;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -71,6 +72,20 @@ public class HibernateSessionFactoryWrap
     {
         return(
             this.threadLocal
+        );
+    }
+
+    public SessionFactory getSessionFactory()
+    {
+        return(
+            this.sf
+        );
+    }
+
+    public ClassMetadata getClassMetadata(Class clazz)
+    {
+        return(
+            this.sf.getClassMetadata(clazz)
         );
     }
 }
