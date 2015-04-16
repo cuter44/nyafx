@@ -3,14 +3,13 @@ package com.github.cuter44.nyafx.hj;
 import java.lang.reflect.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.alibaba.fastjson.*;
 import com.alibaba.fastjson.parser.*;
 //import org.hibernate.*;
 import org.hibernate.metadata.*;
-
-import static com.github.cuter44.nyafx.crypto.CryptoBase.bytesToHex;
 
 /** Jsonize entity according hibernate metadata
  * @since 2.11.0
@@ -23,12 +22,13 @@ public class HibernateJsonizer
     /** 仅序列化(实体)的ID属性
      */
     public static final int ID_ONLY         = 0x2;
-    /** 仅序列化给出的字段
+    /** 仅序列化给出的字段, 包括未被持久化映射的字段
      */
     public static final int RETAIN_NAMED    = 0x4;
     /** 不序列化给出的字段, 除此以外的字段以默认的方式输出.
      */
     public static final int EXCLUDE_NAMED   = 0x8;
+
 
     protected static int extractDotConf(Object o, int defaults)
     {
@@ -73,7 +73,7 @@ public class HibernateJsonizer
         return(j);
     }
 
-    protected static Object getFieldValue(Object o, String fieldName)
+    protected static Field getField(Object o, String fieldName)
     {
         Field f = null;
         Class c = o.getClass();
@@ -90,21 +90,11 @@ public class HibernateJsonizer
             }
         }
 
-        try
-        {
-            if (f != null)
-            {
-                f.setAccessible(true);
-                return(f.get(o));
-            }
-        }
-        catch (IllegalAccessException ex)
-        {
-            throw(new RuntimeException(ex));
-        }
+        if (f != null)
+            f.setAccessible(true);
 
         // else
-        return(null);
+        return(f);
     }
 
 
@@ -126,122 +116,148 @@ public class HibernateJsonizer
         );
     }
 
+    /**
+     * @param json JSONObject to attach data, automatically new one if null passed.
+     * @param o Entity instance to be serialized
+     * @param conf Hint for jsonizer, see specification.
+     */
     public JSONObject jsonizeObject(JSONObject json, Object o, JSONObject conf)
     {
-        // FAIL DEFAULT
-        if (o == null)
-            return(json);
-
-        json = (json!=null) ? json : new JSONObject();
-        conf = (conf!=null) ? conf : new JSONObject();
-
-        Integer rootConf = extractDotConf(conf.get("."), 0x0);
-
-
-        // SKIP
-        if ((rootConf & SKIP) != 0x0)
-            return(json);
-
-
-        // IS ENTITY
-        ClassMetadata meta = this.cmn.getClassMetadata(o.getClass());
-        if (meta == null)
-            throw(new IllegalArgumentException("Argument o is not mapped entity, metadata not found:"+o.getClass().toString()));
-
-
-        //json.put(meta.getIdentifierPropertyName(), meta.getIdentifier(o));
-        String id = meta.getIdentifierPropertyName();
-        json.put(meta.getIdentifierPropertyName(), getFieldValue(o, meta.getIdentifierPropertyName()));
-
-        // ID_ONLY
-        if ((rootConf & ID_ONLY) != 0x0)
+        try
         {
-            return(json);
+            // FAIL DEFAULT
+            if (o == null)
+                return(json);
+
+            json = (json!=null) ? json : new JSONObject();
+            conf = (conf!=null) ? conf : new JSONObject();
+
+            Integer rootConf = extractDotConf(conf.get("."), 0x0);
+
+            // SKIP
+            if ((rootConf & SKIP) != 0x0)
+                return(json);
+
+
+            // IS ENTITY
+            ClassMetadata meta = this.cmn.getClassMetadata(o.getClass());
+            if (meta == null)
+                throw(new IllegalArgumentException("Argument o is not mapped entity, metadata not found:"+o.getClass().toString()));
+
+
+            //json.put(meta.getIdentifierPropertyName(), meta.getIdentifier(o));
+            String id = meta.getIdentifierPropertyName();
+            if (id != null)
+                json.put(id, getField(o, id).get(o));
+
+            // ID_ONLY
+            if ((rootConf & ID_ONLY) != 0x0)
+            {
+                return(json);
+            }
+
+            // RETAIN & EXCLUDE
+            List<String> names = new ArrayList<String>(Arrays.asList(meta.getPropertyNames()));
+
+            if ((rootConf & RETAIN_NAMED) != 0x0)
+            {
+                names.retainAll(conf.keySet());
+                names.addAll(conf.keySet());
+            }
+
+            if ((rootConf & EXCLUDE_NAMED) != 0x0)
+                names.retainAll(conf.keySet());
+
+
+            // SERIALIZE
+            for (String s:names)
+            {
+                Integer nodeConf = extractDotConf(conf.get(s), ID_ONLY);
+
+                // SKIP
+                if ((nodeConf & SKIP) != 0x0)
+                    continue;
+
+                Field f = getField(o, s);
+                Class c = f.getType();
+
+                // PRIMITIVE
+                if (this.pc.isPrimitive(c))
+                {
+                    json.put(s, f.get(o));
+
+                    continue;
+                }
+
+
+                // ENTITY
+                if (this.cmn.getClassMetadata(c) != null)
+                {
+                    json.put(
+                        s,
+                        this.jsonizeObject(
+                            null,
+                            f.get(o),
+                            wrapDotConf(conf.get(s), nodeConf)
+                        )
+                    );
+
+                    continue;
+                }
+
+
+                // ARRAY
+                if (c.isArray())
+                {
+                    json.put(
+                        s,
+                        this.jsonizeArray(
+                            null,
+                            (Object[])f.get(o),
+                            wrapDotConf(conf.get(s), nodeConf)
+                        )
+                    );
+
+                    continue;
+                }
+
+                // COLLECTION
+                if (Collection.class.isAssignableFrom(c))
+                {
+                    json.put(
+                        s,
+                        this.jsonizeCollection(
+                            null,
+                            (Collection)f.get(o),
+                            wrapDotConf(conf.get(s), nodeConf)
+                        )
+                    );
+
+                    continue;
+                }
+
+                // default
+                // {
+                    json.put(
+                        s,
+                        JSON.toJSON(f.get(o))
+                    );
+                // }
+            }
         }
-
-        // RETAIN & EXCLUDE
-        List<String> names = Arrays.asList(meta.getPropertyNames());
-
-        if ((rootConf & RETAIN_NAMED) != 0x0)
-            names.retainAll(conf.keySet());
-
-        if ((rootConf & EXCLUDE_NAMED) != 0x0)
-            names.retainAll(conf.keySet());
-
-
-        // SERIALIZE
-        for (String s:names)
+        catch (IllegalAccessException ex)
         {
-            Class c = meta.getPropertyType(s).getReturnedClass();
-            Integer nodeConf = extractDotConf(conf.get(s), ID_ONLY);
-
-            // PRIMITIVE
-            if (this.pc.isPrimitive(c))
-            {
-                json.put(s, getFieldValue(o, s));
-
-                continue;
-            }
-
-
-            // ENTITY
-            if (this.cmn.getClassMetadata(c) != null)
-            {
-                json.put(
-                    s,
-                    this.jsonizeObject(
-                        null,
-                        getFieldValue(o, s),
-                        wrapDotConf(conf.get(s), nodeConf)
-                    )
-                );
-
-                continue;
-            }
-
-
-            // ARRAY
-            if (c.isArray())
-            {
-                json.put(
-                    s,
-                    this.jsonizeArray(
-                        null,
-                        (Object[])getFieldValue(o, s),
-                        wrapDotConf(conf.get(s), nodeConf)
-                    )
-                );
-
-                continue;
-            }
-
-            // COLLECTION
-            if (Collection.class.isAssignableFrom(c))
-            {
-                json.put(
-                    s,
-                    this.jsonizeCollection(
-                        null,
-                        (Collection)getFieldValue(o, s),
-                        wrapDotConf(conf.get(s), nodeConf)
-                    )
-                );
-
-                continue;
-            }
-
-            // default
-            // {
-                json.put(
-                    s,
-                    JSON.toJSON(getFieldValue(o, s))
-                );
-            // }
+            throw(new RuntimeException(ex));
         }
 
         return(json);
     }
 
+    /**
+     * @param json JSONArray to attach data, automatically new one if null passed.
+     * @param a Entity array to be serialized
+     * @param conf Hint for jsonizer, see specification.
+     */
     public JSONArray jsonizeArray(JSONArray json, Object[] a, JSONObject conf)
     {
         if (a == null)
@@ -286,6 +302,11 @@ public class HibernateJsonizer
         );
     }
 
+    /**
+     * @param json JSONArray to attach data, automatically new one if null passed.
+     * @param a Entity array to be serialized
+     * @param conf Hint for jsonizer, see specification.
+     */
     public JSONArray jsonizeCollection(JSONArray json, Collection c, JSONObject conf)
     {
         if (c == null)
