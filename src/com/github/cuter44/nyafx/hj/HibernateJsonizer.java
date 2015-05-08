@@ -22,12 +22,15 @@ public class HibernateJsonizer
     /** 仅序列化(实体)的ID属性
      */
     public static final int ID_ONLY         = 0x2;
-    /** 仅序列化给出的字段, 包括未被持久化映射的字段
+    /** 仅序列化给出的字段, 同时进行 INCLUDE_NAMED
      */
     public static final int RETAIN_NAMED    = 0x4;
     /** 不序列化给出的字段, 除此以外的字段以默认的方式输出.
      */
     public static final int EXCLUDE_NAMED   = 0x8;
+    /** 并且序列化列出的字段
+     */
+    public static final int INCLUDE_NAMED   = 0x10;
 
 
     protected static int extractDotConf(Object o, int defaults)
@@ -169,6 +172,10 @@ public class HibernateJsonizer
                 names.retainAll(conf.keySet());
 
 
+            if ((rootConf & INCLUDE_NAMED) != 0x0)
+                names.addAll(conf.keySet());
+
+
             // SERIALIZE
             for (String s:names)
             {
@@ -209,16 +216,25 @@ public class HibernateJsonizer
                 // ARRAY
                 if (c.isArray())
                 {
-                    json.put(
-                        s,
-                        this.jsonizeArray(
-                            null,
-                            (Object[])f.get(o),
-                            wrapDotConf(conf.get(s), nodeConf)
-                        )
-                    );
+                    if (this.pc.isPrimitive(c.getComponentType()))
+                    {
+                        json.put(s, f.get(o));
+                        continue;
+                    }
 
-                    continue;
+                    // else
+                    // {
+                        json.put(
+                            s,
+                            this.jsonizeArray(
+                                null,
+                                (Object[])f.get(o),
+                                wrapDotConf(conf.get(s), nodeConf)
+                            )
+                        );
+
+                        continue;
+                    // }
                 }
 
                 // COLLECTION

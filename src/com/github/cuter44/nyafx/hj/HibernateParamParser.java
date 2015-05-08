@@ -1,6 +1,7 @@
 package com.github.cuter44.nyafx.hj;
 
 import java.lang.reflect.*;
+import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -170,7 +171,7 @@ public class HibernateParamParser
                 Field f = getField(o, s);
                 Class c = f.getType();
 
-                if (String.class.isAssignableFrom(c))
+                if (String.class.equals(c))
                 {
                     Object v = getString(req, s);
                     if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
@@ -179,7 +180,7 @@ public class HibernateParamParser
                     continue;
                 }
 
-                if (Byte.class.isAssignableFrom(c))
+                if (Byte.class.equals(c))
                 {
                     Object v = getByte(req, s);
                     if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
@@ -188,7 +189,25 @@ public class HibernateParamParser
                     continue;
                 }
 
-                if (Long.class.isAssignableFrom(c))
+                if (Integer.class.equals(c))
+                {
+                    Object v = getInt(req, s);
+                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
+                        continue;
+                    f.set(o, v);
+                    continue;
+                }
+
+                if (Boolean.class.equals(c))
+                {
+                    Object v = getBoolean(req, s);
+                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
+                        continue;
+                    f.set(o, v);
+                    continue;
+                }
+
+                if (Long.class.equals(c))
                 {
                     Object v = getLong(req, s);
                     if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
@@ -197,14 +216,15 @@ public class HibernateParamParser
                     continue;
                 }
 
-                if (Integer.class.isAssignableFrom(c))
+                if (Date.class.equals(c))
                 {
-                    Object v = getLong(req, s);
+                    Object v = getDate(req, s);
                     if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
                         continue;
                     f.set(o, v);
                     continue;
                 }
+
             }
         }
         catch (IllegalAccessException ex)
