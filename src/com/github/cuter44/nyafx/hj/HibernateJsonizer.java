@@ -169,7 +169,7 @@ public class HibernateJsonizer
             }
 
             if ((rootConf & EXCLUDE_NAMED) != 0x0)
-                names.retainAll(conf.keySet());
+                names.removeAll(conf.keySet());
 
 
             if ((rootConf & INCLUDE_NAMED) != 0x0)
