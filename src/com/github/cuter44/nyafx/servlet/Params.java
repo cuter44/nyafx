@@ -346,6 +346,27 @@ public class Params
         return(value);
     }
 
+    public static Integer[] getIntArray(HttpServletRequest req, String name)
+    {
+        try
+        {
+            String[] sa = getStringArray(req, name);
+            if (sa == null)
+                return(null);
+
+            Integer[] ia = new Integer[sa.length];
+            for (int i=0; i<sa.length; i++)
+                ia[i] = sa[i].isEmpty() ? null : Integer.valueOf(sa[i]);
+
+            return(ia);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            return(null);
+        }
+    }
+
 
     public static List<Long> getLongList(HttpServletRequest req, String name)
     {
