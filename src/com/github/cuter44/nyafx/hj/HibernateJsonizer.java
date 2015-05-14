@@ -179,6 +179,9 @@ public class HibernateJsonizer
             // SERIALIZE
             for (String s:names)
             {
+                if (".".equals(s))
+                    continue;
+
                 Integer nodeConf = extractDotConf(conf.get(s), ID_ONLY);
 
                 // SKIP
@@ -186,6 +189,8 @@ public class HibernateJsonizer
                     continue;
 
                 Field f = getField(o, s);
+                if (f == null)
+                    throw(new RuntimeException("Field not found:"+o.getClass()+"#"+s));
                 Class c = f.getType();
 
                 // PRIMITIVE

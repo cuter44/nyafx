@@ -156,6 +156,9 @@ public class HibernateParamParser
             // SERIALIZE
             for (String s:names)
             {
+                if (".".equals(s))
+                    continue;
+
                 Integer nodeConf = extractDotConf(conf.get(s), 0x0);
 
                 // SKIP
@@ -169,6 +172,8 @@ public class HibernateParamParser
 
 
                 Field f = getField(o, s);
+                if (f == null)
+                    throw(new RuntimeException("Field not found:"+clazz+"#"+s));
                 Class c = f.getType();
 
                 if (String.class.equals(c))
