@@ -144,14 +144,16 @@ public class HibernateJsonizer
 
             // IS ENTITY
             ClassMetadata meta = this.cmn.getClassMetadata(o.getClass());
-            if (meta == null)
-                throw(new IllegalArgumentException("Argument o is not mapped entity, metadata not found:"+o.getClass().toString()));
+            List<String> names = new ArrayList<String>();
+            if (meta != null)
+            {
+                //json.put(meta.getIdentifierPropertyName(), meta.getIdentifier(o));
+                String id = meta.getIdentifierPropertyName();
+                if (id != null)
+                    json.put(id, getField(o, id).get(o));
 
-
-            //json.put(meta.getIdentifierPropertyName(), meta.getIdentifier(o));
-            String id = meta.getIdentifierPropertyName();
-            if (id != null)
-                json.put(id, getField(o, id).get(o));
+                names.addAll(Arrays.asList(meta.getPropertyNames()));
+            }
 
             // ID_ONLY
             if ((rootConf & ID_ONLY) != 0x0)
@@ -160,8 +162,6 @@ public class HibernateJsonizer
             }
 
             // RETAIN & EXCLUDE
-            List<String> names = new ArrayList<String>(Arrays.asList(meta.getPropertyNames()));
-
             if ((rootConf & RETAIN_NAMED) != 0x0)
             {
                 names.retainAll(conf.keySet());
@@ -197,22 +197,6 @@ public class HibernateJsonizer
                 if (this.pc.isPrimitive(c))
                 {
                     json.put(s, f.get(o));
-
-                    continue;
-                }
-
-
-                // ENTITY
-                if (this.cmn.getClassMetadata(c) != null)
-                {
-                    json.put(
-                        s,
-                        this.jsonizeObject(
-                            null,
-                            f.get(o),
-                            wrapDotConf(conf.get(s), nodeConf)
-                        )
-                    );
 
                     continue;
                 }
@@ -257,13 +241,21 @@ public class HibernateJsonizer
                     continue;
                 }
 
-                // default
+                // COMPOSITE
+                // if (Object.class.isAssignableFrom(c))
                 // {
                     json.put(
                         s,
-                        JSON.toJSON(f.get(o))
+                        this.jsonizeObject(
+                            null,
+                            f.get(o),
+                            wrapDotConf(conf.get(s), nodeConf)
+                        )
                     );
+
+                    continue;
                 // }
+
             }
         }
         catch (IllegalAccessException ex)
