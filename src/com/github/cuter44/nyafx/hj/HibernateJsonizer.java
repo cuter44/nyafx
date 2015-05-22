@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import com.alibaba.fastjson.*;
 import com.alibaba.fastjson.parser.*;
-//import org.hibernate.*;
+import org.hibernate.*;
 import org.hibernate.metadata.*;
 
 /** Jsonize entity according hibernate metadata
@@ -143,16 +143,25 @@ public class HibernateJsonizer
 
 
             // IS ENTITY
-            ClassMetadata meta = this.cmn.getClassMetadata(o.getClass());
+            ClassMetadata meta = null;
             List<String> names = new ArrayList<String>();
-            if (meta != null)
+            try
             {
+                System.out.println(Hibernate.getClass(o));
+
+                meta = this.cmn.getClassMetadata(Hibernate.getClass(o));
+                Hibernate.initialize(o);
+
                 //json.put(meta.getIdentifierPropertyName(), meta.getIdentifier(o));
                 String id = meta.getIdentifierPropertyName();
                 if (id != null)
                     json.put(id, getField(o, id).get(o));
 
                 names.addAll(Arrays.asList(meta.getPropertyNames()));
+            }
+            catch (HibernateException ex)
+            {
+                // this is not a presist object or proxy
             }
 
             // ID_ONLY
