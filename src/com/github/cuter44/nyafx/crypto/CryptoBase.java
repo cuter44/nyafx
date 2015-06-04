@@ -6,6 +6,8 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 
+//import com.github.cuter44.nyafx.crypto.Base64;
+
 
 /** Nyaguru Crypto Util
  * Encapulated Java Cryptography Architecture endpoints
@@ -14,16 +16,6 @@ import java.security.NoSuchAlgorithmException;
  */
 public class CryptoBase
 {
-    public static final char[] base64char =
-        {'A','B','C','D','E','F','G','H',
-         'I','J','K','L','M','N','O','P',
-         'Q','R','S','T','U','V','W','X',
-         'Y','Z','a','b','c','d','e','f',
-         'g','h','i','j','k','l','m','n',
-         'o','p','q','r','s','t','u','v',
-         'w','x','y','z','0','1','2','3',
-         '4','5','6','7','8','9','+','/'};
-
     public static final String SR_SHA1PRNG = "SHA1PRNG";
 
     public static final String DEFAULT_RANDOM = SR_SHA1PRNG;
@@ -111,54 +103,24 @@ public class CryptoBase
     }
 
   // BASE64
-    /** 转换字节流 in 为 base64 编码
+    /** 转换字节数组 bytes 为 base64 编码
      */
     public String base64Encode(byte[] bytes)
     {
-        final int[] patterns =
-            {0x0000, 0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f,
-            0x00ff, 0x01ff, 0x03ff,0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff};
-
-        StringBuilder sb = new StringBuilder();
-        int inbuf = 0;
-        int inpos = 0;
-        int inbufsize = 0;
-
-        while (inpos < bytes.length)
-        {
-            inbuf = (inbuf << 8) | (bytes[inpos] & 0xff);
-            inpos += 1;
-            inbufsize += 8;
-
-            if ((inpos%57) == 0 )
-                sb.append("\n");
-
-            while (inbufsize >= 6)
-            {
-                int outbuf = inbuf >> (inbufsize - 6);
-                inbuf = inbuf & patterns[inbufsize - 6];
-                inbufsize -= 6;
-
-                sb.append(base64char[outbuf]);
-            }
-        }
-
-        if (inpos%3 != 0)
-        {
-            inbuf = (inbuf << 8);
-            inbufsize += 8;
-            int outbuf = inbuf >> (inbufsize - 6);
-            sb.append(base64char[outbuf]);
-
-            while (inpos%3 != 0)
-            {
-                sb.append("=");
-                inpos++;
-            }
-        }
-
-        return(sb.toString());
+        return(
+            Base64.encode(bytes)
+        );
     }
+
+    /** 转换Base64串 b64String 为 字节数组
+     */
+    public byte[] base64Decode(String b64String)
+    {
+        return(
+            Base64.decode(b64String)
+        );
+    }
+
 
   // RANDOM
     /** 生成长度为 length 的随机字节数组
