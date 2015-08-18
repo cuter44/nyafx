@@ -32,7 +32,7 @@ public class HibernateParamParser
     public static final int EXCLUDE_NAMED   = 0x8;
     /** 不写入NULL
      */
-    public static final int IGNORE_NULL     = 0x10;
+    public static final int COPY_NULL       = 0x10;
     /** 必填
      */
     public static final int REQUIRED        = 0x20;
@@ -165,22 +165,27 @@ public class HibernateParamParser
                 if ((nodeConf & SKIP) != 0x0)
                     continue;
 
-                // NOT NULL
-                if ((nodeConf & REQUIRED) != 0x0)
-                    if (get(req, s) == null)
-                        throw(new MissingParameterException(s));
-
-
                 Field f = getField(o, s);
                 if (f == null)
                     throw(new RuntimeException("Field not found:"+clazz+"#"+s));
                 Class c = f.getType();
 
+                // NOT NULL & COPY NULL
+                if (get(req, s) == null)
+                {
+                    if ((nodeConf & COPY_NULL) == 0x0)
+                    {
+                        f.set(o, null);
+                        continue;
+                    }
+
+                    if ((nodeConf & REQUIRED) != 0x0)
+                        throw(new MissingParameterException(s));
+                }
+
                 if (String.class.equals(c))
                 {
                     Object v = getString(req, s);
-                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
-                        continue;
                     f.set(o, v);
                     continue;
                 }
@@ -188,8 +193,6 @@ public class HibernateParamParser
                 if (Byte.class.equals(c))
                 {
                     Object v = getByte(req, s);
-                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
-                        continue;
                     f.set(o, v);
                     continue;
                 }
@@ -197,8 +200,6 @@ public class HibernateParamParser
                 if (Integer.class.equals(c))
                 {
                     Object v = getInt(req, s);
-                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
-                        continue;
                     f.set(o, v);
                     continue;
                 }
@@ -206,8 +207,6 @@ public class HibernateParamParser
                 if (Boolean.class.equals(c))
                 {
                     Object v = getBoolean(req, s);
-                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
-                        continue;
                     f.set(o, v);
                     continue;
                 }
@@ -215,8 +214,6 @@ public class HibernateParamParser
                 if (Long.class.equals(c))
                 {
                     Object v = getLong(req, s);
-                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
-                        continue;
                     f.set(o, v);
                     continue;
                 }
@@ -224,8 +221,6 @@ public class HibernateParamParser
                 if (Date.class.equals(c))
                 {
                     Object v = getDate(req, s);
-                    if (v==null && ((nodeConf & IGNORE_NULL) != 0x0))
-                        continue;
                     f.set(o, v);
                     continue;
                 }
