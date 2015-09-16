@@ -96,30 +96,37 @@ public class ParserBundle
   // TEST
     public static void main(String args[])
     {
-        ParserBundle b = ParserBundle.getDefaultInstance();
+        try
+        {
+            ParserBundle b = ParserBundle.getDefaultInstance();
 
-        String o1 = (String)b.parse("string", String.class);
-        System.out.println(o1.getClass()+" "+o1);
+            String o1 = (String)b.parse("string", String.class);
+            System.out.println(o1.getClass()+" "+o1);
 
-        Byte o2 = (Byte)b.parse("1", Byte.class);
-        System.out.println(o2.getClass()+" "+o2);
+            Byte o2 = (Byte)b.parse("1", Byte.class);
+            System.out.println(o2.getClass()+" "+o2);
 
-        Integer o3 = (Integer)b.parse("1", Integer.class);
-        System.out.println(o3.getClass()+" "+o3);
+            Integer o3 = (Integer)b.parse("1", Integer.class);
+            System.out.println(o3.getClass()+" "+o3);
 
-        Long o4 = (Long)b.parse("1", Long.class);
-        System.out.println(o4.getClass()+" "+o4);
+            Long o4 = (Long)b.parse("1", Long.class);
+            System.out.println(o4.getClass()+" "+o4);
 
-        Float o5 = (Float)b.parse("1.23", Float.class);
-        System.out.println(o5.getClass()+" "+o5);
+            Float o5 = (Float)b.parse("1.23", Float.class);
+            System.out.println(o5.getClass()+" "+o5);
 
-        Double o6 = (Double)b.parse("1.23", Double.class);
-        System.out.println(o6.getClass()+" "+o6);
+            Double o6 = (Double)b.parse("1.23", Double.class);
+            System.out.println(o6.getClass()+" "+o6);
 
-        Boolean o7 = (Boolean)b.parse("1.23", Boolean.class);
-        System.out.println(o7.getClass()+" "+o7);
+            Boolean o7 = (Boolean)b.parse("1.23", Boolean.class);
+            System.out.println(o7.getClass()+" "+o7);
 
-        Boolean o8 = (Date)b.parse("1.23", Date.class);
-        System.out.println(o8.getClass()+" "+o8);
+            Date o8 = (Date)b.parse("1442392400000", Date.class);
+            System.out.println(o8.getClass()+" "+o8);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
     }
 }

@@ -902,7 +902,7 @@ public class PrimitiveParsers
             try
             {
                 return(
-                    v!=null ? null : new Date(v)
+                    v!=null ? new Date(v) : null
                 );
             }
             catch (Exception ex)
