@@ -9,7 +9,7 @@ public class ParserBundle
     implements ValueParser
 {
     public HashMap<Type, ValueParser> primaryParsers;
-    public HashMap<Type, ValueParser.ListParser> listParsers;
+    //public HashMap<Type, ValueParser.ListParser> listParsers;
 
   // SINGLETON
     private static class Singleton
@@ -26,7 +26,7 @@ public class ParserBundle
     public ParserBundle()
     {
         this.primaryParsers = new HashMap<Type, ValueParser>();
-        this.listParsers = new HashMap<Type, ValueParser.ListParser>();
+        //this.listParsers = new HashMap<Type, ValueParser.ListParser>();
 
         return;
     }

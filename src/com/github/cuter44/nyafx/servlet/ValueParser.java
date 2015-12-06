@@ -45,6 +45,7 @@ public interface ValueParser<T>
         //}
     }
 
+    @Deprecated
     public static interface ListParser<T> extends ValueParser
     {
         /** Parse parameter to expected Object
