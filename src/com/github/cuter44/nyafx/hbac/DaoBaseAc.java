@@ -162,6 +162,7 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         {
             case ALLOW:
             case ACQUIESCE:
+                super.remove(id);
                 return;
             default:
                 throw(new SecurityException("[hbac]Access denied."));
