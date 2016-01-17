@@ -1,4 +1,4 @@
-package com.github.cuter44.nyafx.hbac;
+package com.github.cuter44.nyafx.ac;
 
 import java.io.Serializable;
 import java.util.List;
@@ -8,13 +8,14 @@ import com.github.cuter44.nyafx.dao.*;
 import org.hibernate.Hibernate;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.engine.spi.SessionImplementor;
 
-public abstract class DaoBaseAc<T> extends DaoBase<T>
+public abstract class DaoBaseAcStrict<T> extends DaoBase<T>
 {
     protected Enforcer enforcer;
 
   // CONSTRUCT
-    public DaoBaseAc()
+    public DaoBaseAcStrict()
     {
         super();
 
@@ -23,7 +24,7 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         return;
     }
 
-    public DaoBaseAc(HibernateSessionFactoryWrap factory)
+    public DaoBaseAcStrict(HibernateSessionFactoryWrap factory)
     {
         super(factory);
 
@@ -32,7 +33,7 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         return;
     }
 
-    public DaoBaseAc(HibernateSessionFactoryWrap factory, Enforcer enforcer)
+    public DaoBaseAcStrict(HibernateSessionFactoryWrap factory, Enforcer enforcer)
     {
         super(factory);
 
@@ -52,10 +53,9 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
                 return(o);
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -68,10 +68,9 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
                 return(o);
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -84,10 +83,9 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
                 return(o);
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -107,10 +105,12 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
                 return(id);
+            case ACQUIESCE:
+            case RESIST:
+            case DENY:
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -119,18 +119,19 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         Class co = Hibernate.getClass(o);
         ClassMetadata cm = super.getClassMetadata(co);
 
-        Object oo = super.get(co, cm.getIdentifier(o));
+        Object oo = super.get(co, cm.getIdentifier(o, (SessionImplementor)super.getThisSession()));
 
         Judgement j = this.enforcer.acAssert(originator, oo, "U");
 
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
-                super.update(o);
                 return;
+            case ACQUIESCE:
+            case RESIST:
+            case DENY:
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -139,18 +140,20 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         Class co = Hibernate.getClass(o);
         ClassMetadata cm = super.getClassMetadata(co);
 
-        Object oo = super.get(co, cm.getIdentifier(o));
+        Object oo = super.get(co, cm.getIdentifier(o, (SessionImplementor)super.getThisSession()));
 
         Judgement j = this.enforcer.acAssert(originator, oo, "D");
 
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
                 super.delete(o);
                 return;
+            case ACQUIESCE:
+            case RESIST:
+            case DENY:
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -163,11 +166,13 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
         switch (j)
         {
             case ALLOW:
-            case ACQUIESCE:
                 super.remove(id);
                 return;
+            case ACQUIESCE:
+            case RESIST:
+            case DENY:
             default:
-                throw(new SecurityException("[hbac]Access denied."));
+                throw(new SecurityException("[nyafx.ac]Access denied."));
         }
     }
 
@@ -199,13 +204,16 @@ public abstract class DaoBaseAc<T> extends DaoBase<T>
 
         switch (j)
         {
+            case ALLOW:
+                return(obj);
+            case ACQUIESCE:
             case RESIST:
             case DENY:
-                throw(new SecurityException("hbac:Action "+j.toString()));
             default:
+                throw(new SecurityException("[nyafx.ac]Access denied: "+j.toString()));
         }
 
-        return(obj);
+        //return(obj);
     }
 
 }
