@@ -13,6 +13,7 @@ import org.hibernate.metadata.*;
 
 /** Jsonize entity according hibernate metadata
  * @since 2.11.0
+ * @deprecated use JSONBuilder instead.
  */
 public class HibernateJsonizer
 {

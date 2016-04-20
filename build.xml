@@ -19,7 +19,7 @@
   <property name="dtlibdir" value="lib" />
   <property name="javadocdir" value="javadoc" />
   <property name="destdir" value="bin" />
-  <property name="version" value="3.3.0-dev+dcx" />
+  <property name="version" value="3.4.0" />
 
   <path id="classpath">
     <!-- lib 存放开发及测试用库 -->
@@ -49,6 +49,7 @@
   <target name="build" description="编译">
     <mkdir dir="${destdir}" />
     <antcall target="copy-config" />
+    <property name="user.language" value="en"/>
     <javac srcdir="${srcdir}" destdir="${destdir}" failonerror="true" debug="true" includeantruntime="false" encoding="utf-8">
       <compilerarg value="-Xlint:unchecked"/>
       <compilerarg value="-Xlint:deprecation"/>
