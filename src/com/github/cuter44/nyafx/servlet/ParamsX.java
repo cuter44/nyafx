@@ -15,7 +15,8 @@ import javax.servlet.http.HttpSession;
 
 /** Servlet Parameter Toolkit
  *
- * Advanced version of Param.
+ * Advanced version of Param. Quick method to find params from request
+ * and parse to demanded type.
  *
  * Differences from old:
  * <ul>

@@ -2,13 +2,14 @@ package com.github.cuter44.nyafx.servlet;
 
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
 public class ParserBundle
     implements ValueParser
 {
-    public HashMap<Type, ValueParser> primaryParsers;
+    public Map<Type, ValueParser> primaryParsers;
     //public HashMap<Type, ValueParser.ListParser> listParsers;
 
   // SINGLETON

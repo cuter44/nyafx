@@ -2,6 +2,8 @@ package com.github.cuter44.nyafx.fastjson;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Set;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -12,7 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import com.alibaba.fastjson.*;
 import com.alibaba.fastjson.util.*;
 
-/** Programtically configurable json builder.
+/** Programatically configurable json builder.
  *
  * requires fastjson-1.2.9+
  */
@@ -32,10 +34,12 @@ public class JSONBuilder
      */
     protected static final Pattern PATTERN_BINARY_AS_HEXA = Pattern.compile("\\bbh\\b");
 
-    protected static String extractHint(Object o)
+    protected String DEFAULT_HINT_VALUE = "";
+
+    protected String extractHint(Object o)
     {
         if (o == null)
-            return("");
+            return(this.DEFAULT_HINT_VALUE);
 
         if (o instanceof String)
             return((String)o);
@@ -43,12 +47,10 @@ public class JSONBuilder
         if (o instanceof JSONObject)
             return(extractHint(((JSONObject)o).get(".")));
 
-        return("");
+        return(this.DEFAULT_HINT_VALUE);
     }
 
-    private static final JSONObject FAIL_SAFE_HINT = JSON.parseObject("{'.':''}");
-
-    protected static JSONObject wrapHint(Object o)
+    protected JSONObject wrapHint(Object o)
     {
         if (o == null)
             return(null);
@@ -62,7 +64,7 @@ public class JSONBuilder
         return(null);
     }
 
-    protected static boolean isPrimitive(Class<?> clazz)
+    protected boolean isPrimitive(Class<?> clazz)
     {
         return(
             clazz.isPrimitive()
@@ -84,6 +86,19 @@ public class JSONBuilder
         );
     }
 
+    protected Map<Class, List<FieldInfo>> knownClasses = new Hashtable<Class, List<FieldInfo>>();
+
+    protected List<FieldInfo> getFieldInfos(Class clazz)
+    {
+        List<FieldInfo> fi = this.knownClasses.get(clazz);
+        if (fi != null)
+            return(fi);
+
+        this.knownClasses.put(clazz, fi = TypeUtils.computeGetters(clazz, null, null, false));
+        return(fi);
+    }
+
+
   // EXPOSED
     /** jsonize Java bean to a JSONObject.
      *
@@ -98,17 +113,17 @@ public class JSONBuilder
         json = json!=null ? json : new JSONObject();
         hint = hint!=null ? hint : new JSONObject();
 
-        String rh = extractHint(hint);
+        String rh = this.extractHint(hint);
 
         if (PATTERN_EXCLUDE.matcher(rh).find())
             return(json);
 
-        List<FieldInfo> fields = TypeUtils.computeGetters(javaObject.getClass(), null, null, false);
+        List<FieldInfo> fields = this.getFieldInfos(javaObject.getClass());
 
         for (FieldInfo f:fields)
         {
             String k = f.name;
-            String ph = extractHint(hint.get(k));
+            String ph = this.extractHint(hint.get(k));
 
             if (PATTERN_EXCLUDE.matcher(ph).find())
                 continue;
@@ -117,7 +132,7 @@ public class JSONBuilder
 
             // SWITCH CLASS
             // CASE PRIMITIVE
-            if (isPrimitive(c))
+            if (this.isPrimitive(c))
             {
                 json.put(
                     k,
@@ -173,7 +188,7 @@ public class JSONBuilder
                         this.jsonizeMap(
                             null,
                             (Map)f.get(javaObject),
-                            wrapHint(hint.get(k))
+                            this.wrapHint(hint.get(k))
                         )
                     );
                 }
@@ -193,11 +208,12 @@ public class JSONBuilder
      * @param hint          hints to customized output.
      */
     public JSONObject jsonizeMap(JSONObject json, Map javaObject, JSONObject hint)
+        throws IllegalAccessException, InvocationTargetException
     {
         json = json!=null ? json : new JSONObject();
         hint = hint!=null ? hint : new JSONObject();
 
-        String rh = extractHint(hint);
+        String rh = this.extractHint(hint);
 
         if (PATTERN_EXCLUDE.matcher(rh).find())
             return(json);
@@ -209,7 +225,7 @@ public class JSONBuilder
         for (Object key:keys)
         {
             String k = key.toString();
-            String ph = extractHint(hint.get(k));
+            String ph = this.extractHint(hint.get(k));
             if (PATTERN_EXCLUDE.matcher(ph).find())
                 continue;
 
@@ -217,15 +233,15 @@ public class JSONBuilder
             Class c = v.getClass();
 
             // SWITCH CLASS
-            // CASE PRIMITIVE
-            if (isPrimitive(c))
+            // CASE:PRIMITIVE
+            if (this.isPrimitive(c))
             {
                 json.put(k, v);
 
                 continue;
             }
 
-            // CASE ARRAY
+            // CASE:ARRAY
             if (c.isArray())
             {
                 if (PATTERN_INCLUDE.matcher(ph).find())
@@ -235,7 +251,7 @@ public class JSONBuilder
                         this.jsonizeArray(
                             null,
                             (Object[])v,
-                            wrapHint(hint.get(k))
+                            this.wrapHint(hint.get(k))
                         )
                     );
                 }
@@ -243,7 +259,7 @@ public class JSONBuilder
                 continue;
             }
 
-            // CASE COLLECTION
+            // CASE:COLLECTION
             if (Collection.class.isAssignableFrom(c))
             {
                 if (PATTERN_INCLUDE.matcher(ph).find())
@@ -253,7 +269,7 @@ public class JSONBuilder
                         this.jsonizeCollection(
                             null,
                             (Collection)v,
-                            wrapHint(hint.get(k))
+                            this.wrapHint(hint.get(k))
                         )
                     );
                 }
@@ -261,7 +277,7 @@ public class JSONBuilder
                 continue;
             }
 
-            // CASE MAP
+            // CASE:MAP
             if (Map.class.isAssignableFrom(c))
             {
                 if (PATTERN_INCLUDE.matcher(ph).find())
@@ -271,10 +287,25 @@ public class JSONBuilder
                         this.jsonizeMap(
                             null,
                             (Map)v,
-                            wrapHint(hint.get(k))
+                            this.wrapHint(hint.get(k))
                         )
                     );
                 }
+
+                continue;
+            }
+
+            // DEFAULT
+            if (PATTERN_INCLUDE.matcher(ph).find())
+            {
+                json.put(
+                    k,
+                    this.jsonizeObject(
+                        null,
+                        v,
+                        this.wrapHint(hint.get(k))
+                    )
+                );
 
                 continue;
             }
@@ -291,11 +322,12 @@ public class JSONBuilder
      * @param hint          hints to customized output.
      */
     public JSONArray jsonizeCollection(JSONArray json, Collection javaObject, JSONObject hint)
+        throws IllegalAccessException, InvocationTargetException
     {
         json = json!=null ? json : new JSONArray();
         hint = hint!=null ? hint : new JSONObject();
 
-        String rh = extractHint(hint);
+        String rh = this.extractHint(hint);
 
         if (PATTERN_EXCLUDE.matcher(rh).find())
             return(json);
@@ -307,50 +339,64 @@ public class JSONBuilder
             Class c = v.getClass();
 
             // SWITCH CLASS
-            // CASE PRIMITIVE
-            if (isPrimitive(c))
+            // CASE:PRIMITIVE
+            if (this.isPrimitive(c))
             {
                 json.add(v);
 
                 continue;
             }
 
-            // CASE ARRAY
+            // CASE:ARRAY
             if (c.isArray())
             {
                 json.add(
                     this.jsonizeArray(
                         null,
                         (Object[])v,
-                        wrapHint(hint)
+                        this.wrapHint(hint)
                     )
                 );
 
                 continue;
             }
 
-            // CASE COLLECTION
+            // CASE:COLLECTION
             if (Collection.class.isAssignableFrom(c))
             {
                 json.add(
                     this.jsonizeCollection(
                         null,
                         (Collection)v,
-                        wrapHint(hint)
+                        this.wrapHint(hint)
                     )
                 );
 
                 continue;
             }
 
-            // CASE MAP
+            // CASE:MAP
             if (Map.class.isAssignableFrom(c))
             {
                 json.add(
                     this.jsonizeMap(
                         null,
                         (Map)v,
-                        wrapHint(hint)
+                        this.wrapHint(hint)
+                    )
+                );
+
+                continue;
+            }
+
+            // DEFAULT
+            //if (PATTERN_INCLUDE.matcher(ph).find())
+            {
+                json.add(
+                    this.jsonizeObject(
+                        null,
+                        v,
+                        this.wrapHint(hint)
                     )
                 );
 
@@ -369,11 +415,12 @@ public class JSONBuilder
      * @param hint          hints to customized output.
      */
     public JSONArray jsonizeArray(JSONArray json, Object[] javaObject, JSONObject hint)
+        throws IllegalAccessException, InvocationTargetException
     {
         json = json!=null ? json : new JSONArray();
         hint = hint!=null ? hint : new JSONObject();
 
-        String rh = extractHint(hint);
+        String rh = this.extractHint(hint);
 
         if (PATTERN_EXCLUDE.matcher(rh).find())
             return(json);
@@ -382,8 +429,8 @@ public class JSONBuilder
         Class c = array.getClass().getComponentType();
 
         // SWITCH CLASS
-        // CASE PRIMITIVE
-        if (isPrimitive(c))
+        // CASE:PRIMITIVE
+        if (this.isPrimitive(c))
         {
             for (Object v:array)
                 json.add(v);
@@ -391,7 +438,7 @@ public class JSONBuilder
             return(json);
         }
 
-        // CASE ARRAY
+        // CASE:ARRAY
         if (c.isArray())
         {
             for (Object v:array)
@@ -400,7 +447,7 @@ public class JSONBuilder
                     this.jsonizeArray(
                         null,
                         (Object[])v,
-                        wrapHint(hint)
+                        this.wrapHint(hint)
                     )
                 );
             }
@@ -408,7 +455,7 @@ public class JSONBuilder
             return(json);
         }
 
-        // CASE COLLECTION
+        // CASE:COLLECTION
         if (Collection.class.isAssignableFrom(c))
         {
             for (Object v:array)
@@ -417,7 +464,7 @@ public class JSONBuilder
                     this.jsonizeCollection(
                         null,
                         (Collection)v,
-                        wrapHint(hint)
+                        this.wrapHint(hint)
                     )
                 );
             }
@@ -425,7 +472,7 @@ public class JSONBuilder
             return(json);
         }
 
-        // CASE MAP
+        // CASE:MAP
         if (Map.class.isAssignableFrom(c))
         {
             for (Object v:array)
@@ -434,7 +481,23 @@ public class JSONBuilder
                     this.jsonizeMap(
                         null,
                         (Map)v,
-                        wrapHint(hint)
+                        this.wrapHint(hint)
+                    )
+                );
+            }
+
+            return(json);
+        }
+        // DEFAULT
+        //if (PATTERN_INCLUDE.matcher(ph).find())
+        {
+            for (Object v:array)
+            {
+                json.add(
+                    this.jsonizeObject(
+                        null,
+                        v,
+                        this.wrapHint(hint)
                     )
                 );
             }
@@ -442,6 +505,6 @@ public class JSONBuilder
             return(json);
         }
 
-        return(json);
+        //return(json);
     }
 }

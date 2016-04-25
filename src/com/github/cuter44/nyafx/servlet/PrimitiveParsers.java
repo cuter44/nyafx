@@ -122,8 +122,8 @@ public class PrimitiveParsers
             if (v == null)
                 return(null);
 
-            if (v instanceof Byte)
-                return((Byte)v);
+            if (v instanceof Number)
+                return(((Number)v).byteValue());
 
             if (Byte.TYPE.isInstance(v))
                 return((Byte)v);
@@ -247,11 +247,11 @@ public class PrimitiveParsers
             if (v == null)
                 return(null);
 
-            if (v instanceof Integer)
+            if (v instanceof Number)
                 return((Integer)v);
 
             if (Integer.TYPE.isInstance(v))
-                return((Integer)v);
+                return(((Number)v).intValue());
 
             if (v instanceof String)
                 return(this.parseString((String)v, type));
@@ -372,8 +372,8 @@ public class PrimitiveParsers
             if (v == null)
                 return(null);
 
-            if (v instanceof Long)
-                return((Long)v);
+            if (v instanceof Number)
+                return(((Number)v).longValue());
 
             if (Long.TYPE.isInstance(v))
                 return((Long)v);
@@ -497,8 +497,8 @@ public class PrimitiveParsers
             if (v == null)
                 return(null);
 
-            if (v instanceof Float)
-                return((Float)v);
+            if (v instanceof Number)
+                return(((Number)v).floatValue());
 
             if (Float.TYPE.isInstance(v))
                 return((Float)v);
@@ -622,8 +622,8 @@ public class PrimitiveParsers
             if (v == null)
                 return(null);
 
-            if (v instanceof Double)
-                return((Double)v);
+            if (v instanceof Number)
+                return(((Number)v).doubleValue());
 
             if (Double.TYPE.isInstance(v))
                 return((Double)v);
