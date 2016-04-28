@@ -75,6 +75,7 @@ public class JSONBuilder
                 || clazz == Double.class
                 || clazz == Float.class
                 || clazz == Integer.class
+                || clazz == byte[].class
                 || clazz == BigInteger.class
                 || clazz == BigDecimal.class
                 || clazz == Character.class
@@ -192,6 +193,21 @@ public class JSONBuilder
                         )
                     );
                 }
+
+                continue;
+            }
+
+            // DEFAULT
+            if (PATTERN_INCLUDE.matcher(ph).find())
+            {
+                json.put(
+                    k,
+                    this.jsonizeObject(
+                        null,
+                        f.get(javaObject),
+                        this.wrapHint(hint.get(k))
+                    )
+                );
 
                 continue;
             }
