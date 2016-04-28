@@ -15,6 +15,10 @@ public class CriteriaQueryContext<T>
 
     public Root<T> r;
 
+    public Integer start;
+
+    public Integer limit;
+
     public CriteriaQueryContext()
     {
         return;
@@ -22,10 +26,22 @@ public class CriteriaQueryContext<T>
 
     public CriteriaQueryContext(Class<T> e, CriteriaQuery<T> c, CriteriaBuilder b, Root<T> r)
     {
+        this();
+
         this.e = e;
         this.c = c;
         this.b = b;
         this.r = r;
+
+        return;
+    }
+
+    public CriteriaQueryContext(Class<T> e, CriteriaQuery<T> c, CriteriaBuilder b, Root<T> r, Integer start, Integer limit)
+    {
+        this(e, c, b, r);
+
+        this.start = start;
+        this.limit = limit;
 
         return;
     }

@@ -95,9 +95,9 @@ public class SearchBuilder
     protected ParserBundle parsers = ParserBundle.newDefaultInstance();
 
   // SUB PROCESS
-    protected class RestrictionsParser
+    protected class RestrictionsParser<T>
     {
-        protected CriteriaQueryContext c;
+        protected CriteriaQueryContext<T> c;
         protected List<Predicate> predicates;
         protected JSONObject restrictions;
         protected JSONObject hint;
@@ -115,6 +115,8 @@ public class SearchBuilder
       // PROCESS
         protected void parsePath(Path p, Class e, JSONObject search, JSONObject hint)
         {
+            hint = hint!=null ? hint : new JSONObject();
+
             for (String k:search.keySet())
             {
                 String ph = SearchBuilder.this.extractHint(k);
@@ -122,8 +124,13 @@ public class SearchBuilder
                     continue;
 
                 Object v = search.get(k);
-                Class pClass = SearchBuilder.this.getFieldInfos(e).get(k).fieldClass;
-                // if k not existed or detectable
+                FieldInfo fi = SearchBuilder.this.getFieldInfos(e).get(k);
+                if (fi == null)
+                {
+                    // slient fail on unrecognized property k
+                    continue;
+                }
+                Class pClass = fi.fieldClass;
 
                 // SWITCH
                 // CASE:SUB HIERARCHY
@@ -142,7 +149,12 @@ public class SearchBuilder
                 // CASE:CRITERIONS
                 if (v instanceof JSONArray)
                 {
-                    this.parseCriterions(p, pClass, (JSONArray)v, ph);
+                    this.parseCriterions(
+                        p,
+                        pClass,
+                        (JSONArray)v,
+                        ph
+                    );
 
                     continue;
                 }
@@ -263,7 +275,7 @@ public class SearchBuilder
         }
 
       // EXPOSED
-        public CriteriaQueryContext startParse()
+        public CriteriaQueryContext<T> startParse()
         {
             String rh = SearchBuilder.this.extractHint(hint);
             if (SearchBuilder.PATTERN_X.matcher(rh).find())
@@ -286,13 +298,13 @@ public class SearchBuilder
     }
 
   // EXPOSED
-    public CriteriaQueryContext parseSearch(CriteriaQueryContext c, JSONObject search, JSONObject hint)
+    public <X> CriteriaQueryContext<X> parseSearch(CriteriaQueryContext<X> c, JSONObject search, JSONObject hint)
     {
         // WHERE
         JSONObject restrictions = search.getJSONObject(CLAUSE_WHERE);
         if (restrictions != null)
         {
-            c = new RestrictionsParser(c, restrictions, hint).startParse();
+            c = new RestrictionsParser<X>(c, restrictions, hint).startParse();
         }
 
         // ORDER
