@@ -297,6 +297,69 @@ public class SearchBuilder
 
     }
 
+    /**
+     * @return c
+     */
+    protected <X> CriteriaQueryContext<X> parseOrder(CriteriaQueryContext<X> c, JSONArray orders)
+    {
+        List<Order> parsedOrders = new ArrayList<Order>(orders.size());
+
+        for (Object e0:orders)
+        {
+            try
+            {
+                JSONArray ord = (JSONArray)e0;
+
+                String p = ord.getString(0);
+
+                if (ord.size()==1)
+                {
+                    parsedOrders.add(
+                        c.b.asc(
+                            c.r.get(p)
+                        )
+                    );
+
+                    continue;
+                }
+
+                String o = ord.getString(1);
+
+                if (ORDER_DESC.equalsIgnoreCase(o))
+                {
+                    parsedOrders.add(
+                        c.b.desc(
+                            c.r.get(p)
+                        )
+                    );
+                    continue;
+                }
+
+                if (ORDER_ASC.equalsIgnoreCase(o))
+                {
+                    parsedOrders.add(
+                        c.b.asc(
+                            c.r.get(p)
+                        )
+                    );
+                    continue;
+                }
+            }
+            catch (ClassCastException ex)
+            {
+                ex.printStackTrace();
+            }
+            catch (IndexOutOfBoundsException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+
+        c.c.orderBy(parsedOrders);
+
+        return(c);
+    }
+
   // EXPOSED
     public <X> CriteriaQueryContext<X> parseSearch(CriteriaQueryContext<X> c, JSONObject search, JSONObject hint)
     {
@@ -311,8 +374,13 @@ public class SearchBuilder
         JSONArray orders = search.getJSONArray(CLAUSE_ORDER);
         if (orders != null)
         {
-            // TODO
+            c = this.parseOrder(c, orders);
         }
+
+        // START
+        c.start = search.getInteger(CLAUSE_START);
+        // LIMIT
+        c.limit = search.getInteger(CLAUSE_LIMIT);
 
         return(c);
     }
