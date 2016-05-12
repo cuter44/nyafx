@@ -13,8 +13,8 @@ public class MissingParameterException
         super();
     }
 
-    public MissingParameterException(String paramName)
+    public MissingParameterException(String message)
     {
-        super("Missing parameter:" + paramName);
+        super(message);
     }
 }

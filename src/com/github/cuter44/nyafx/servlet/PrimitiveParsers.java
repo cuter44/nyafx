@@ -875,6 +875,9 @@ public class PrimitiveParsers
             if (v instanceof Date)
                 return((Date)v);
 
+            if (v instanceof Number)
+                return(this.parseLong(((Number)v).longValue(), type));
+
             if (v instanceof String)
                 return(this.parseString((String)v, type));
 

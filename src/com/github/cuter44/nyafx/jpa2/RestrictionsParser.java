@@ -27,6 +27,8 @@ public class RestrictionsParser
 
     public static final Pattern PATTERN_X   = Pattern.compile("\\bx\\b");
 
+    public JSONObject BLANK_HINT = JSON.parseObject("{}");
+
     public String DEFAULT_HINT_VALUE = "eq lt le gt ge in";
 
     public boolean constraintApplied = true;
@@ -51,7 +53,7 @@ public class RestrictionsParser
     protected JSONObject wrapHint(Object o)
     {
         if (o == null)
-            return(null);
+            return(BLANK_HINT);
 
         if (o instanceof JSONObject)
             return((JSONObject)o);
@@ -59,7 +61,7 @@ public class RestrictionsParser
         if (o instanceof String)
             return(JSON.parseObject("{'.':'"+(String)o+"'}"));
 
-        return(null);
+        return(BLANK_HINT);
     }
 
   // FIELD INFO
@@ -269,11 +271,11 @@ public class RestrictionsParser
         protected void parsePath(Path path, Class e, JSONObject search, JSONObject hint)
             throws IllegalArgumentException, NoSuchFieldException
         {
-            hint = hint!=null ? hint : new JSONObject();
+            hint = hint!=null ? hint : RestrictionsParser.this.BLANK_HINT;
 
             for (String k:search.keySet())
             {
-                String ph = RestrictionsParser.this.extractHint(k);
+                String ph = RestrictionsParser.this.extractHint(hint.get(k));
                 if (RestrictionsParser.this.constraintApplied && RestrictionsParser.PATTERN_X.matcher(ph).find())
                     continue;
 
@@ -285,7 +287,6 @@ public class RestrictionsParser
                         throw(new NoSuchFieldException("Unable to build path "+k+"@"+path.toString()));
                     continue;
                 }
-                Class pClass = fi.fieldClass;
 
                 // SWITCH
                 // CASE:SUB HIERARCHY
@@ -293,7 +294,7 @@ public class RestrictionsParser
                 {
                     this.parsePath(
                         path.get(k),
-                        pClass,
+                        fi.fieldClass,
                         (JSONObject)v,
                         wrapHint(hint.get(k))
                     );
@@ -305,8 +306,8 @@ public class RestrictionsParser
                 if (v instanceof JSONArray)
                 {
                     this.parseCriterions(
-                        path,
-                        pClass,
+                        path.get(k),
+                        fi.fieldClass,
                         (JSONArray)v,
                         ph
                     );
