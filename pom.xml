@@ -1,0 +1,102 @@
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  >
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.cuter44</groupId>
+    <artifactId>nyafx</artifactId>
+    <packaging>jar</packaging>
+    <version>3.4.4</version>
+    <name>Nya FX</name>
+    <description>喵(咕噜)框架(其实是工具集 (/ω\ )"</description>
+    <url>https://github.com/cuter44/nyafx</url>
+
+    <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>    
+
+    <dependencies>
+      <!-- java -->
+        <dependency>
+          <groupId>javax</groupId>
+          <artifactId>javaee-api</artifactId>
+          <version>7.0</version>
+          <scope>provided</scope>
+        </dependency>
+
+      <!-- fastjson -->
+        <dependency>
+          <groupId>com.alibaba</groupId>
+          <artifactId>fastjson</artifactId>
+          <version>1.2.9</version>
+          <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+      <defaultGoal>package</defaultGoal>
+
+      <plugins>
+
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.5.1</version>
+          <configuration>
+              <source>1.7</source>
+              <target>1.7</target>
+              <compilerArgs>
+                <!--
+                <arg>-Xlint:unchecked</arg>
+                <arg>-Xlint:deprecation</arg>
+                -->
+              </compilerArgs>
+          </configuration>
+         </plugin>
+             
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.10.3</version>
+          <configuration>
+            <breakiterator>true</breakiterator>
+            <show>private</show>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.4.0</version>
+          <configuration>
+            <cleanupDaemonThreads>false</cleanupDaemonThreads>
+            <!-- use exec.mainClass to specify main class -->
+            <!-- use exec.args to specify arguments -->
+          </configuration>
+     	  </plugin>
+      </plugins>
+    </build>
+
+    <developers>
+      <developer>
+        <id>cuter44</id>
+        <name>Galin Wu</name>
+        <email>cuter44@foxmail.com</email>
+        <url>https://github.com/cuter44/</url>
+        <organization>SCAU-SIDC</organization>
+        <organizationUrl>https://github.com/scau-sidc/</organizationUrl>
+      </developer>
+    </developers>
+
+    <issueManagement>
+      <system>github</system>
+      <url>https://github.com/cuter44/nyafx</url>
+    </issueManagement>
+
+    <scm>
+      <connection>scm:git:https://github.com/cuter44/nyafx.git</connection>
+      <developerConnection>scm:git:https://github.com/cuter44/nyafx.git</developerConnection>
+      <tag>mavenify</tag>
+      <url>https://github.com/cuter44/nyafx</url>
+    </scm>
+</project>
