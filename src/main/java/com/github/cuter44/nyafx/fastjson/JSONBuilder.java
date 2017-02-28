@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.lang.reflect.InvocationTargetException;
 
 import com.alibaba.fastjson.*;
-import com.alibaba.fastjson.util.*;
 
 /** Programatically configurable json builder.
  *
@@ -87,18 +86,22 @@ public class JSONBuilder
         );
     }
 
-    protected Map<Class, List<FieldInfo>> knownClasses = new Hashtable<Class, List<FieldInfo>>();
+    protected Map<Class, Map<String, FieldInfoLite>> knownClasses = new Hashtable<Class, Map<String, FieldInfoLite>>();
 
-    protected List<FieldInfo> getFieldInfos(Class clazz)
+    protected Map<String, FieldInfoLite> getFieldInfo(Class clazz)
     {
-        List<FieldInfo> fi = this.knownClasses.get(clazz);
-        if (fi != null)
-            return(fi);
+        Map<String, FieldInfoLite> mfi = this.knownClasses.get(clazz);
+        if (mfi != null)
+            return(mfi);
 
-        this.knownClasses.put(clazz, fi = TypeUtils.computeGetters(clazz, null, null, false));
-        return(fi);
+        // ELSE
+        this.knownClasses.put(
+            clazz,
+            mfi = TypeUtilsLite.findFieldsViaGetter(clazz)
+        );
+
+        return(mfi);
     }
-
 
   // EXPOSED
     /** jsonize Java bean to a JSONObject.
@@ -122,11 +125,13 @@ public class JSONBuilder
         if (PATTERN_EXCLUDE.matcher(rh).find())
             return(json);
 
-        List<FieldInfo> fields = this.getFieldInfos(javaObject.getClass());
+        Map<String, FieldInfoLite> mfi = this.getFieldInfo(javaObject.getClass());
 
-        for (FieldInfo f:fields)
+        for (Map.Entry<String, FieldInfoLite> tuple:mfi.entrySet())
         {
-            String k = f.name;
+            String          k = tuple.getKey();
+            FieldInfoLite   f = tuple.getValue();
+
             String ph = this.extractHint(hint.get(k));
 
             if (PATTERN_EXCLUDE.matcher(ph).find())

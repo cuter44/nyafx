@@ -5,7 +5,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.InvocationTargetException;
 
 import com.alibaba.fastjson.*;
-import com.alibaba.fastjson.util.*;
 
 import com.github.cuter44.nyafx.servlet.*;
 
@@ -14,21 +13,19 @@ public class JSONActualizer
     public boolean failException = false;
 
   // FIELD INFO
-    protected Map<Class, Map<String, FieldInfo>> knownClasses = new Hashtable<Class, Map<String, FieldInfo>>();
+    protected Map<Class, Map<String, FieldInfoLite>> knownClasses = new Hashtable<Class, Map<String, FieldInfoLite>>();
 
-    protected Map<String, FieldInfo> getFieldInfos(Class clazz)
+    protected Map<String, FieldInfoLite> getFieldInfo(Class clazz)
     {
-        Map<String, FieldInfo> mfi = this.knownClasses.get(clazz);
+        Map<String, FieldInfoLite> mfi = this.knownClasses.get(clazz);
         if (mfi != null)
             return(mfi);
 
         // ELSE
-        List<FieldInfo> lfi = TypeUtils.computeGetters(clazz, null, null, false);
-        mfi = new HashMap<String, FieldInfo>();
-        for (FieldInfo fi:lfi)
-            mfi.put(fi.name, fi);
-
-        this.knownClasses.put(clazz, mfi);
+        this.knownClasses.put(
+            clazz,
+            mfi = TypeUtilsLite.findFieldsViaGetter(clazz)
+        );
 
         return(mfi);
     }
@@ -36,16 +33,26 @@ public class JSONActualizer
   // VALUE PARSER
     protected ParserBundle valueParsers;
 
-    public JSONActualizer setValuePatsers(ParserBundle parsers)
+    public JSONActualizer setValueParsers(ParserBundle parsers)
     {
         this.valueParsers = parsers;
 
         return(this);
     }
 
+    /** @deprecated Misspelled method name.
+     */
+    @Deprecated
+    public JSONActualizer setValuePatsers(ParserBundle parsers)
+    {
+        return(
+            this.setValueParsers(parsers)
+        );
+    }
+
     public JSONActualizer addValueParser(Type type, ValueParser parser)
     {
-        this.valueParsers.primaryParsers.put(type, parser);
+        this.valueParsers.addPrimitiveParser(type, parser);
 
         return(this);
     }
@@ -59,28 +66,68 @@ public class JSONActualizer
     }
 
   // ACTUALIZE
+    /** Actualize object without valid-fields list.
+     * Invoker should filtered out unwanted fields before inputing the data.
+     * ALL top-most fields of <code>json</code> are being iterated and parsed.
+     * Bit higher performance than the hinted one.
+     */
+    public <T> T actualizeObject(T object, Class<T> clazz, JSONObject json)
+        throws InstantiationException, NoSuchFieldException, IllegalAccessException, InvocationTargetException
+    {
+        object = object!=null ? object : clazz.newInstance();
+
+        Set<String> keys = json.keySet();
+        Map<String, FieldInfoLite> mfi = this.getFieldInfo(clazz);
+
+        for (String k:keys)
+        {
+            FieldInfoLite fi = mfi.get(k);
+            if (fi == null)
+            {
+                if (this.failException)
+                    throw(new NoSuchFieldException("No such field "+k));
+                // else
+                continue;
+            }
+
+            fi.set(
+                object,
+                this.valueParsers.parse(
+                    json.get(k),
+                    fi.fieldClass
+                )
+            );
+        }
+
+        return(object);
+    }
+
+    /** Actualize object with valid-fields list.
+     * All top-most fields of <code>json</code> are being iterated, whose name not in <code>fields</code> are skipped.
+     */
     public <T> T actualizeObject(T object, Class<T> clazz, JSONObject json, Collection<String> fields)
         throws InstantiationException, NoSuchFieldException, IllegalAccessException, InvocationTargetException
     {
         object = object!=null ? object : clazz.newInstance();
 
         Set<String> keys = json.keySet();
-        Map<String, FieldInfo> mfi = this.getFieldInfos(clazz);
+        Map<String, FieldInfoLite> mfi = this.getFieldInfo(clazz);
 
         for (String k:keys)
         {
             if (!fields.contains(k))
                 continue;
 
-            FieldInfo fi = mfi.get(k);
+            FieldInfoLite fi = mfi.get(k);
             if (fi == null)
             {
                 if (this.failException)
                     throw(new NoSuchFieldException("No such field "+k));
+                // else
                 continue;
             }
 
-            fi.field.set(
+            fi.set(
                 object,
                 this.valueParsers.parse(
                     json.get(k),

@@ -43,7 +43,7 @@ public abstract class JPADaoBase<T>
         );
     }
 
-    /** Alias to <code>this.cem.get().getEntityManagerFactory().createEntityManager()</code>
+    /** Alias to <code>this.currentEM().getEntityManagerFactory().createEntityManager()</code>
      * Create and return a new em other than the current-thread-bound one, and it is the caller's duty to manage its life-cycle.
      * Noted that it always need a current-thread-bound em, which is created if not yet. This may cause resource leak if you forget to end it.
      * This behavior is stand still because we acually not keeping direct access to the emf instance.
@@ -51,84 +51,84 @@ public abstract class JPADaoBase<T>
     public EntityManager newEM()
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .getEntityManagerFactory()
                 .createEntityManager()
         );
     }
 
   // TX
-    /** Alias to <code>this.cem.get().getTransaction().begin()</code>
+    /** Alias to <code>this.currentEM().getTransaction().begin()</code>
      * @see javax.persistence.EntityTransaction#begin()
      */
     public void begin()
         throws IllegalStateException
     {
-        this.cem.get()
+        this.currentEM()
             .getTransaction()
             .begin();
 
         return;
     }
 
-    /** Alias to <code>this.cem.get().flush()</code>
+    /** Alias to <code>this.currentEM().flush()</code>
      * @see javax.persistence.EntityManager#flush()
      */
     public void flush()
         throws TransactionRequiredException, PersistenceException
     {
-        this.cem.get()
+        this.currentEM()
             .flush();
 
         return;
     }
 
-    /** Alias to <code>this.cem.get().getTransaction().commit()</code>
+    /** Alias to <code>this.currentEM().getTransaction().commit()</code>
      * @see javax.persistence.EntityTransaction#commit()
      */
     public void commit()
         throws IllegalStateException, RollbackException
     {
-        this.cem.get()
+        this.currentEM()
             .getTransaction()
             .commit();
 
         return;
     }
 
-    /** Alias to <code>this.cem.get().getTransaction().rollback()</code>
+    /** Alias to <code>this.currentEM().getTransaction().rollback()</code>
      * @see javax.persistence.EntityTransaction#rollback()
      */
     public void rollback()
         throws IllegalStateException, PersistenceException
     {
-        this.cem.get()
+        this.currentEM()
             .getTransaction()
             .rollback();
 
         return;
     }
 
-    /** Alias to <code>this.cem.get().getTransaction().setRollbackOnly()</code>
+    /** Alias to <code>this.currentEM().getTransaction().setRollbackOnly()</code>
      * @see javax.persistence.EntityTransaction#setRolebackOnly()
      */
     public void fail()
         throws IllegalStateException
     {
-        this.cem.get()
+        this.currentEM()
             .getTransaction()
             .setRollbackOnly();
 
         return;
     }
 
-    /** Alias to <code>this.cem.get().close()</code>
+    /** Alias to <code>this.currentEM().close()</code>
      * @see javax.persistence.EntityManager#close()
      */
     public void close()
         throws IllegalStateException
     {
-        this.cem.get()
+        this.currentEM()
             .close();
 
         this.cem.remove();
@@ -155,6 +155,23 @@ public abstract class JPADaoBase<T>
         return(o);
     }
 
+    public static <X> X nonull(X o, Exception ex)
+        throws Exception
+    {
+        if (o == null)
+            throw(ex);
+
+        return(o);
+    }
+
+    public static <X> X nonull(X o, RuntimeException ex)
+    {
+        if (o == null)
+            throw(ex);
+
+        return(o);
+    }
+
   // CRUD
   // R
     public abstract T get(Object id)
@@ -162,19 +179,19 @@ public abstract class JPADaoBase<T>
     //{
         // default implemention
         //return(
-            //this.cem.get()
+            //this.currentEM()
                 //.find(EntityName.class, id)
         //);
     //}
 
-    /** Alias to <code>this.cem.get().find(clazz, id)</code>
+    /** Alias to <code>this.currentEM().find(clazz, id)</code>
      @see javax.persistence.EntityManager#find(java.lang.Class, java.lang.Object)
      */
     public <X> X get(Class<X> clazz, Object id)
         throws IllegalArgumentException
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .<X>find(clazz, id)
         );
     }
@@ -183,14 +200,14 @@ public abstract class JPADaoBase<T>
         throws IllegalArgumentException, EntityNotFoundException
     {
         return(
-            this.cem.get()
+            this.currentEM()
             .<X>getReference(clazz, id)
         );
     }
 
     public <X> X refresh(X o)
     {
-        this.cem.get()
+        this.currentEM()
             .refresh(o);
         return(o);
     }
@@ -199,20 +216,20 @@ public abstract class JPADaoBase<T>
     public void persist(Object o)
         throws EntityExistsException, IllegalArgumentException, TransactionRequiredException
     {
-        this.cem.get()
+        this.currentEM()
             .persist(o);
 
         return;
     }
 
   // U
-    /** Alias to <code>this.cem.get().lock()</code>
+    /** Alias to <code>this.currentEM().lock()</code>
      * @see javax.persistence.EntityManager#close()
      */
     public void lock(Object e, LockModeType lock)
         throws IllegalStateException
     {
-        this.cem.get()
+        this.currentEM()
             .lock(e, lock);
 
         return;
@@ -222,7 +239,7 @@ public abstract class JPADaoBase<T>
         throws IllegalArgumentException, TransactionRequiredException
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .merge(o)
         );
     }
@@ -239,7 +256,7 @@ public abstract class JPADaoBase<T>
     public void remove(Object o)
         throws IllegalArgumentException, TransactionRequiredException
     {
-        this.cem.get()
+        this.currentEM()
             .remove(o);
 
         return;
@@ -248,7 +265,7 @@ public abstract class JPADaoBase<T>
     public <X> void delete(Class<X> clazz, Object id)
         throws IllegalArgumentException, TransactionRequiredException, EntityNotFoundException
     {
-        this.cem.get()
+        this.currentEM()
             .remove(
             this.<X>ref(clazz, id)
         );
@@ -260,7 +277,7 @@ public abstract class JPADaoBase<T>
     public Query createNativeQuery(String sql)
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .createNativeQuery(sql)
         );
     }
@@ -271,7 +288,7 @@ public abstract class JPADaoBase<T>
     public Query query(String jpql)
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .createQuery(jpql)
         );
     }
@@ -281,7 +298,7 @@ public abstract class JPADaoBase<T>
     public <X> TypedQuery<X> query(String jpql, Class<X> returnClass)
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .<X>createQuery(jpql, returnClass)
         );
     }
@@ -292,7 +309,7 @@ public abstract class JPADaoBase<T>
         CriteriaQueryContext<X> ctx = new CriteriaQueryContext<X>();
 
         ctx.e = clazz;
-        ctx.b = this.cem.get().getCriteriaBuilder();
+        ctx.b = this.currentEM().getCriteriaBuilder();
         ctx.c = ctx.b.<X>createQuery(clazz);
         ctx.r = ctx.c.from(clazz);
 
@@ -301,18 +318,72 @@ public abstract class JPADaoBase<T>
         return(ctx);
     }
 
-    /** Alias to <code>this.cem.get().create(c).getSingleResult()</code>
+    public <X> CriteriaCountContext<X> criteriaCount(Class<X> clazz)
+    {
+        CriteriaCountContext<X> ctx = new CriteriaCountContext<X>();
+
+        ctx.e = clazz;
+        ctx.b = this.currentEM().getCriteriaBuilder();
+        ctx.c = ctx.b.createQuery(Long.class);
+        ctx.r = ctx.c.from(clazz);
+
+        ctx.c.select(ctx.b.countDistinct(ctx.r));
+
+        return(ctx);
+    }
+
+    public <X> CriteriaUpdateContext<X> criteriaUpdate(Class<X> clazz)
+    {
+        CriteriaUpdateContext<X> ctx = new CriteriaUpdateContext<X>();
+
+        ctx.e = clazz;
+        ctx.b = this.currentEM().getCriteriaBuilder();
+        ctx.c = ctx.b.<X>createCriteriaUpdate(clazz);
+        ctx.r = ctx.c.from(clazz);
+
+        return(ctx);
+    }
+
+    public <X> CriteriaDeleteContext<X> criteriaDelete(Class<X> clazz)
+    {
+        CriteriaDeleteContext<X> ctx = new CriteriaDeleteContext<X>();
+
+        ctx.e = clazz;
+        ctx.b = this.currentEM().getCriteriaBuilder();
+        ctx.c = ctx.b.<X>createCriteriaDelete(clazz);
+        ctx.r = ctx.c.from(clazz);
+
+        return(ctx);
+    }
+
+    /** Alias to <code>this.currentEM().createQuery(criteria)</code>
      * Shortened method to directly create a create a executable query.
      */
     public <X> TypedQuery<X> query(CriteriaQuery<X> criteria)
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .<X>createQuery(criteria)
         );
     }
 
-    /** Alias to <code>this.cem.get().createQuery(c).getSingleResult()</code>
+    public Query query(CriteriaUpdate criteria)
+    {
+        return(
+            this.currentEM()
+                .createQuery(criteria)
+        );
+    }
+
+    public Query query(CriteriaDelete criteria)
+    {
+        return(
+            this.currentEM()
+                .createQuery(criteria)
+        );
+    }
+
+    /** Alias to <code>this.currentEM().createQuery(c).getSingleResult()</code>
      * Shortened method to directly get a single result.
      */
     public <X> X getRequired(CriteriaQuery<X> c)
@@ -322,13 +393,13 @@ public abstract class JPADaoBase<T>
             PersistenceException
     {
         return(
-            this.cem.get()
+            this.currentEM()
                 .<X>createQuery(c)
                 .getSingleResult()
         );
     }
 
-    /** Alias to <code>this.cem.get().createQuery(c).getSingleResult()</code>
+    /** Alias to <code>this.currentEM().createQuery(c).getSingleResult()</code>, but return null if no result fetched.
      * Shortened method to directly get a single result.
      */
     public <X> X get(CriteriaQuery<X> c)
@@ -388,5 +459,4 @@ public abstract class JPADaoBase<T>
 
         return(q);
     }
-
 }

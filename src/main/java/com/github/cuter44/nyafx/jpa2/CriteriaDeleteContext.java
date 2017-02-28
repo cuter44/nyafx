@@ -1,31 +1,28 @@
 package com.github.cuter44.nyafx.jpa2;
 
 import java.util.List;
+import java.util.ArrayList;
 import javax.persistence.criteria.*;
 
-public class CriteriaQueryContext<T>
+public class CriteriaDeleteContext<T>
     implements AbstractCriteriaContext<T>
 {
     /** Targeted entity class
      */
-    public Class e;
+    public Class<T> e;
 
-    public CriteriaQuery<T> c;
+    public CriteriaDelete<T> c;
 
     public CriteriaBuilder b;
 
     public Root<T> r;
 
-    public Integer start;
-
-    public Integer limit;
-
-    public CriteriaQueryContext()
+    public CriteriaDeleteContext()
     {
         return;
     }
 
-    public CriteriaQueryContext(Class<T> e, CriteriaQuery<T> c, CriteriaBuilder b, Root<T> r)
+    public CriteriaDeleteContext(Class<T> e, CriteriaDelete<T> c, CriteriaBuilder b, Root<T> r)
     {
         this();
 
@@ -33,16 +30,6 @@ public class CriteriaQueryContext<T>
         this.c = c;
         this.b = b;
         this.r = r;
-
-        return;
-    }
-
-    public CriteriaQueryContext(Class<T> e, CriteriaQuery<T> c, CriteriaBuilder b, Root<T> r, Integer start, Integer limit)
-    {
-        this(e, c, b, r);
-
-        this.start = start;
-        this.limit = limit;
 
         return;
     }
@@ -69,12 +56,12 @@ public class CriteriaQueryContext<T>
     @Override
     public Integer getStart()
     {
-        return(this.start);
+        return(null);
     }
     @Override
     public void setStart(Integer start)
     {
-        this.start = start;
+        // NOOP
 
         return;
     }
@@ -82,12 +69,12 @@ public class CriteriaQueryContext<T>
     @Override
     public Integer getLimit()
     {
-        return(this.limit);
+        return(null);
     }
     @Override
     public void setLimit(Integer limit)
     {
-        this.limit = limit;
+        // NOOP
 
         return;
     }
@@ -101,14 +88,14 @@ public class CriteriaQueryContext<T>
     }
 
     @Override
-    public CriteriaQueryContext<T> where(Expression<Boolean> restriction)
+    public CriteriaDeleteContext<T> where(Expression<Boolean> restriction)
     {
         this.c.where(restriction);
         return(this);
     }
 
     @Override
-    public CriteriaQueryContext<T> where(Predicate ... restrictions)
+    public CriteriaDeleteContext<T> where(Predicate ... restrictions)
     {
         this.c.where(restrictions);
         return(this);
@@ -117,22 +104,20 @@ public class CriteriaQueryContext<T>
     @Override
     public List<Order> getOrderList()
     {
-        return(
-            this.c.getOrderList()
-        );
+        return(new ArrayList<Order>(0));
     }
 
     @Override
-    public CriteriaQueryContext<T> orderBy(List<Order> o)
+    public CriteriaDeleteContext<T> orderBy(List<Order> o)
     {
-        this.c.orderBy(o);
+        //NOOP
         return(this);
     }
 
     @Override
-    public CriteriaQueryContext<T> orderBy(Order ... o)
+    public CriteriaDeleteContext<T> orderBy(Order ... o)
     {
-        this.c.orderBy(o);
+        //NOOP
         return(this);
     }
 }

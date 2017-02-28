@@ -1,11 +1,19 @@
 package com.github.cuter44.nyafx.servlet;
 
+import java.lang.reflect.Array;
 import java.util.Date;
-
-import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Collection;
 import java.util.Arrays;
 
+/** Provides basic implemention that mainly focus on converting string to java
+ * primitive types.
+ *
+ * No intelligent sensitive, hence no depending on conv param. This is notably
+ * on coverting Dates, which take in only a unix-timestamp in millisecond, but
+ * cannont handle any other form.
+ * User should DIY for advanced/customized usage.
+ */
 public class PrimitiveParsers
 {
   // String
@@ -15,7 +23,7 @@ public class PrimitiveParsers
         public static StringParser instance = new StringParser();
 
         @Override
-        public String parse(Object v, Type type)
+        public String parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -23,11 +31,11 @@ public class PrimitiveParsers
             if (v instanceof String)
                 return((String)v);
 
-            throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
+            return(v.toString());
         }
 
         @Override
-        public String parseString(String v, Type type)
+        public String parseString(String v, Object conv)
         {
             return(v);
         }
@@ -41,7 +49,7 @@ public class PrimitiveParsers
         public String regexSeperator = ",";
 
         @Override
-        public String[] parse(Object v, Type type)
+        public String[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -50,13 +58,34 @@ public class PrimitiveParsers
                 return((String[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v.getClass().isArray())
+            {
+                String[] a = new String[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = StringParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                String[] a = new String[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = StringParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public String[] parseString(String v, Type type)
+        public String[] parseString(String v, Object conv)
         {
             return(
                 v.split(this.regexSeperator)
@@ -64,7 +93,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public String[] parseStringArray(String[] v, Type type)
+        public String[] parseStringArray(String[] v, Object conv)
         {
             return(v);
         }
@@ -76,22 +105,22 @@ public class PrimitiveParsers
         public static StringArrayParser instance = new StringArrayParser();
 
         @Override
-        public List<String> parse(Object v, Type type)
+        public List<String> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<String> parseString(String v, Type type)
+        public List<String> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -105,7 +134,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<String> parseStringArray(String[] v, Type type)
+        public List<String> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(v)
@@ -120,7 +149,7 @@ public class PrimitiveParsers
         public static ByteParser instance = new ByteParser();
 
         @Override
-        public Byte parse(Object v, Type type)
+        public Byte parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -132,25 +161,17 @@ public class PrimitiveParsers
                 return((Byte)v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Byte parseString(String v, Type type)
+        public Byte parseString(String v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? Byte.valueOf(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? Byte.valueOf(v) : null
+            );
         }
     }
 
@@ -160,7 +181,7 @@ public class PrimitiveParsers
         public static ByteArrayParser instance = new ByteArrayParser();
 
         @Override
-        public Byte[] parse(Object v, Type type)
+        public Byte[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -169,13 +190,37 @@ public class PrimitiveParsers
                 return((Byte[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Byte[] a = new Byte[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = ByteParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Byte[] a = new Byte[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = ByteParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Byte[] parseString(String v, Type type)
+        public Byte[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -189,7 +234,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Byte[] parseStringArray(String[] v, Type type)
+        public Byte[] parseStringArray(String[] v, Object conv)
         {
             Byte[] b = new Byte[v.length];
 
@@ -206,22 +251,22 @@ public class PrimitiveParsers
         public static ByteListParser instance = new ByteListParser();
 
         @Override
-        public List<Byte> parse(Object v, Type type)
+        public List<Byte> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Byte> parseString(String v, Type type)
+        public List<Byte> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -234,7 +279,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Byte> parseStringArray(String[] v, Type type)
+        public List<Byte> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(
@@ -251,7 +296,7 @@ public class PrimitiveParsers
         public static IntParser instance = new IntParser();
 
         @Override
-        public Integer parse(Object v, Type type)
+        public Integer parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -263,25 +308,17 @@ public class PrimitiveParsers
                 return(((Number)v).intValue());
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Integer parseString(String v, Type type)
+        public Integer parseString(String v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? Integer.valueOf(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? Integer.valueOf(v) : null
+            );
         }
     }
 
@@ -291,7 +328,7 @@ public class PrimitiveParsers
         public static IntArrayParser instance = new IntArrayParser();
 
         @Override
-        public Integer[] parse(Object v, Type type)
+        public Integer[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -300,13 +337,37 @@ public class PrimitiveParsers
                 return((Integer[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Integer[] a = new Integer[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = IntParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Integer[] a = new Integer[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = IntParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Integer[] parseString(String v, Type type)
+        public Integer[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -320,7 +381,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Integer[] parseStringArray(String[] v, Type type)
+        public Integer[] parseStringArray(String[] v, Object conv)
         {
             Integer[] b = new Integer[v.length];
 
@@ -337,22 +398,22 @@ public class PrimitiveParsers
         public static IntListParser instance = new IntListParser();
 
         @Override
-        public List<Integer> parse(Object v, Type type)
+        public List<Integer> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Integer> parseString(String v, Type type)
+        public List<Integer> parseString(String v, Object conv)
         {
 
             if (v.length() == 0)
@@ -366,7 +427,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Integer> parseStringArray(String[] v, Type type)
+        public List<Integer> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(
@@ -383,7 +444,7 @@ public class PrimitiveParsers
         public static LongParser instance = new LongParser();
 
         @Override
-        public Long parse(Object v, Type type)
+        public Long parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -395,25 +456,17 @@ public class PrimitiveParsers
                 return((Long)v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Long parseString(String v, Type type)
+        public Long parseString(String v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? Long.valueOf(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? Long.valueOf(v) : null
+            );
         }
     }
 
@@ -423,7 +476,7 @@ public class PrimitiveParsers
         public static LongArrayParser instance = new LongArrayParser();
 
         @Override
-        public Long[] parse(Object v, Type type)
+        public Long[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -432,13 +485,37 @@ public class PrimitiveParsers
                 return((Long[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Long[] a = new Long[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = LongParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Long[] a = new Long[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = LongParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Long[] parseString(String v, Type type)
+        public Long[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -452,7 +529,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Long[] parseStringArray(String[] v, Type type)
+        public Long[] parseStringArray(String[] v, Object conv)
         {
             Long[] b = new Long[v.length];
 
@@ -469,22 +546,22 @@ public class PrimitiveParsers
         public static LongListParser instance = new LongListParser();
 
         @Override
-        public List<Long> parse(Object v, Type type)
+        public List<Long> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Long> parseString(String v, Type type)
+        public List<Long> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -497,7 +574,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Long> parseStringArray(String[] v, Type type)
+        public List<Long> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(
@@ -514,7 +591,7 @@ public class PrimitiveParsers
         public static FloatParser instance = new FloatParser();
 
         @Override
-        public Float parse(Object v, Type type)
+        public Float parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -526,25 +603,17 @@ public class PrimitiveParsers
                 return((Float)v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Float parseString(String v, Type type)
+        public Float parseString(String v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? Float.valueOf(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? Float.valueOf(v) : null
+            );
         }
     }
 
@@ -554,7 +623,7 @@ public class PrimitiveParsers
         public static FloatArrayParser instance = new FloatArrayParser();
 
         @Override
-        public Float[] parse(Object v, Type type)
+        public Float[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -563,13 +632,37 @@ public class PrimitiveParsers
                 return((Float[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Float[] a = new Float[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = FloatParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Float[] a = new Float[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = FloatParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Float[] parseString(String v, Type type)
+        public Float[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -583,7 +676,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Float[] parseStringArray(String[] v, Type type)
+        public Float[] parseStringArray(String[] v, Object conv)
         {
             Float[] b = new Float[v.length];
 
@@ -600,22 +693,22 @@ public class PrimitiveParsers
         public static FloatListParser instance = new FloatListParser();
 
         @Override
-        public List<Float> parse(Object v, Type type)
+        public List<Float> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Float> parseString(String v, Type type)
+        public List<Float> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -628,7 +721,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Float> parseStringArray(String[] v, Type type)
+        public List<Float> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(
@@ -645,7 +738,7 @@ public class PrimitiveParsers
         public static DoubleParser instance = new DoubleParser();
 
         @Override
-        public Double parse(Object v, Type type)
+        public Double parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -657,25 +750,17 @@ public class PrimitiveParsers
                 return((Double)v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Double parseString(String v, Type type)
+        public Double parseString(String v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? Double.valueOf(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? Double.valueOf(v) : null
+            );
         }
     }
 
@@ -685,7 +770,7 @@ public class PrimitiveParsers
         public static DoubleArrayParser instance = new DoubleArrayParser();
 
         @Override
-        public Double[] parse(Object v, Type type)
+        public Double[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -694,13 +779,37 @@ public class PrimitiveParsers
                 return((Double[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Double[] a = new Double[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = DoubleParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Double[] a = new Double[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = DoubleParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Double[] parseString(String v, Type type)
+        public Double[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -714,7 +823,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Double[] parseStringArray(String[] v, Type type)
+        public Double[] parseStringArray(String[] v, Object conv)
         {
             Double[] b = new Double[v.length];
 
@@ -731,22 +840,22 @@ public class PrimitiveParsers
         public static DoubleListParser instance = new DoubleListParser();
 
         @Override
-        public List<Double> parse(Object v, Type type)
+        public List<Double> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Double> parseString(String v, Type type)
+        public List<Double> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -759,7 +868,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Double> parseStringArray(String[] v, Type type)
+        public List<Double> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(
@@ -776,7 +885,7 @@ public class PrimitiveParsers
         public static BooleanParser instance = new BooleanParser();
 
         @Override
-        public Boolean parse(Object v, Type type)
+        public Boolean parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -788,25 +897,17 @@ public class PrimitiveParsers
                 return((Boolean)v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Boolean parseString(String v, Type type)
+        public Boolean parseString(String v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? Boolean.valueOf(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? Boolean.valueOf(v) : null
+            );
         }
     }
 
@@ -816,7 +917,7 @@ public class PrimitiveParsers
         public static BooleanArrayParser instance = new BooleanArrayParser();
 
         @Override
-        public Boolean[] parse(Object v, Type type)
+        public Boolean[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -825,13 +926,37 @@ public class PrimitiveParsers
                 return((Boolean[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Boolean[] a = new Boolean[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = BooleanParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Boolean[] a = new Boolean[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = BooleanParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Boolean[] parseString(String v, Type type)
+        public Boolean[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -845,7 +970,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Boolean[] parseStringArray(String[] v, Type type)
+        public Boolean[] parseStringArray(String[] v, Object conv)
         {
             Boolean[] b = new Boolean[v.length];
 
@@ -862,22 +987,22 @@ public class PrimitiveParsers
         public static BooleanListParser instance = new BooleanListParser();
 
         @Override
-        public List<Boolean> parse(Object v, Type type)
+        public List<Boolean> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Boolean> parseString(String v, Type type)
+        public List<Boolean> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -890,7 +1015,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Boolean> parseStringArray(String[] v, Type type)
+        public List<Boolean> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(
@@ -907,7 +1032,7 @@ public class PrimitiveParsers
         public static DateParser instance = new DateParser();
 
         @Override
-        public Date parse(Object v, Type type)
+        public Date parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -916,43 +1041,27 @@ public class PrimitiveParsers
                 return((Date)v);
 
             if (v instanceof Number)
-                return(this.parseLong(((Number)v).longValue(), type));
+                return(this.parseLong(((Number)v).longValue(), conv));
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Date parseString(String v, Type type)
+        public Date parseString(String v, Object conv)
         {
-            try
-            {
-                Long l = LongParser.instance.parseString(v, Long.class);
+            Long l = LongParser.instance.parseString(v, Long.class);
 
-                return(this.parseLong(l, type));
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(this.parseLong(l, conv));
         }
 
-        public Date parseLong(Long v, Type type)
+        public Date parseLong(Long v, Object conv)
         {
-            try
-            {
-                return(
-                    v!=null ? new Date(v) : null
-                );
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                return(null);
-            }
+            return(
+                v!=null ? new Date(v) : null
+            );
         }
     }
 
@@ -962,7 +1071,7 @@ public class PrimitiveParsers
         public static DateArrayParser instance = new DateArrayParser();
 
         @Override
-        public Date[] parse(Object v, Type type)
+        public Date[] parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
@@ -971,13 +1080,40 @@ public class PrimitiveParsers
                 return((Date[])v);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
+
+            if (v instanceof String[])
+                return(this.parseStringArray((String[])v, conv));
+
+            if (v instanceof Long[])
+                return(this.parseLongArray((Long[])v, conv));
+
+            if (v.getClass().isArray())
+            {
+                Date[] a = new Date[Array.getLength(v)];
+                for (int i=0; i<a.length; i++)
+                    a[i] = DateParser.instance.parse(Array.get(v, i), conv);
+
+                return(a);
+            }
+
+            if (Collection.class.isAssignableFrom(v.getClass()))
+            {
+                Collection<?> c = (Collection<?>)v;
+                Date[] a = new Date[c.size()];
+
+                int i=0;
+                for (Object e : c)
+                    a[i++] = DateParser.instance.parse(e, conv);
+
+                return(a);
+            }
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public Date[] parseString(String v, Type type)
+        public Date[] parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -991,7 +1127,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public Date[] parseStringArray(String[] v, Type type)
+        public Date[] parseStringArray(String[] v, Object conv)
         {
             return(
                 this.parseLongArray(
@@ -1001,7 +1137,7 @@ public class PrimitiveParsers
             );
         }
 
-        public Date[] parseLongArray(Long[] v, Type type)
+        public Date[] parseLongArray(Long[] v, Object conv)
         {
             Date[] b = new Date[v.length];
 
@@ -1018,22 +1154,22 @@ public class PrimitiveParsers
         public static DateListParser instance = new DateListParser();
 
         @Override
-        public List<Date> parse(Object v, Type type)
+        public List<Date> parse(Object v, Object conv)
         {
             if (v == null)
                 return(null);
 
             if (v instanceof String)
-                return(this.parseString((String)v, type));
+                return(this.parseString((String)v, conv));
 
             if (v instanceof String[])
-                return(this.parseStringArray((String[])v, type));
+                return(this.parseStringArray((String[])v, conv));
 
             throw(new IllegalArgumentException("Unable to parse:"+v.toString()));
         }
 
         @Override
-        public List<Date> parseString(String v, Type type)
+        public List<Date> parseString(String v, Object conv)
         {
             if (v.length() == 0)
                 return(null);
@@ -1046,7 +1182,7 @@ public class PrimitiveParsers
         }
 
         @Override
-        public List<Date> parseStringArray(String[] v, Type type)
+        public List<Date> parseStringArray(String[] v, Object conv)
         {
             return(
                 Arrays.asList(

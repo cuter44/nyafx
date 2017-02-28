@@ -3,29 +3,25 @@ package com.github.cuter44.nyafx.jpa2;
 import java.util.List;
 import javax.persistence.criteria.*;
 
-public class CriteriaQueryContext<T>
+public class CriteriaCountContext<T>
     implements AbstractCriteriaContext<T>
 {
     /** Targeted entity class
      */
-    public Class e;
+    public Class<T> e;
 
-    public CriteriaQuery<T> c;
+    public CriteriaQuery<Long> c;
 
     public CriteriaBuilder b;
 
     public Root<T> r;
 
-    public Integer start;
-
-    public Integer limit;
-
-    public CriteriaQueryContext()
+    public CriteriaCountContext()
     {
         return;
     }
 
-    public CriteriaQueryContext(Class<T> e, CriteriaQuery<T> c, CriteriaBuilder b, Root<T> r)
+    public CriteriaCountContext(Class<T> e, CriteriaQuery<Long> c, CriteriaBuilder b, Root<T> r)
     {
         this();
 
@@ -33,16 +29,6 @@ public class CriteriaQueryContext<T>
         this.c = c;
         this.b = b;
         this.r = r;
-
-        return;
-    }
-
-    public CriteriaQueryContext(Class<T> e, CriteriaQuery<T> c, CriteriaBuilder b, Root<T> r, Integer start, Integer limit)
-    {
-        this(e, c, b, r);
-
-        this.start = start;
-        this.limit = limit;
 
         return;
     }
@@ -69,12 +55,12 @@ public class CriteriaQueryContext<T>
     @Override
     public Integer getStart()
     {
-        return(this.start);
+        return(null);
     }
     @Override
     public void setStart(Integer start)
     {
-        this.start = start;
+        // NOOP
 
         return;
     }
@@ -82,12 +68,12 @@ public class CriteriaQueryContext<T>
     @Override
     public Integer getLimit()
     {
-        return(this.limit);
+        return(null);
     }
     @Override
     public void setLimit(Integer limit)
     {
-        this.limit = limit;
+        // NOOP
 
         return;
     }
@@ -101,14 +87,14 @@ public class CriteriaQueryContext<T>
     }
 
     @Override
-    public CriteriaQueryContext<T> where(Expression<Boolean> restriction)
+    public CriteriaCountContext<T> where(Expression<Boolean> restriction)
     {
         this.c.where(restriction);
         return(this);
     }
 
     @Override
-    public CriteriaQueryContext<T> where(Predicate ... restrictions)
+    public CriteriaCountContext<T> where(Predicate ... restrictions)
     {
         this.c.where(restrictions);
         return(this);
@@ -123,16 +109,17 @@ public class CriteriaQueryContext<T>
     }
 
     @Override
-    public CriteriaQueryContext<T> orderBy(List<Order> o)
+    public CriteriaCountContext<T> orderBy(List<Order> o)
     {
         this.c.orderBy(o);
         return(this);
     }
 
     @Override
-    public CriteriaQueryContext<T> orderBy(Order ... o)
+    public CriteriaCountContext<T> orderBy(Order ... o)
     {
         this.c.orderBy(o);
         return(this);
     }
+
 }

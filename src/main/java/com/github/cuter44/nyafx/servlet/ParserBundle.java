@@ -6,10 +6,13 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
+/** Coverter bundle that automatically select and route convertion to
+ * specified parser according required type.
+ */
 public class ParserBundle
     implements ValueParser
 {
-    public Map<Type, ValueParser> primaryParsers;
+    protected Map<Type, ValueParser> primitiveParsers;
     //public HashMap<Type, ValueParser.ListParser> listParsers;
 
   // SINGLETON
@@ -26,7 +29,7 @@ public class ParserBundle
   // CONSTRUCT
     public ParserBundle()
     {
-        this.primaryParsers = new HashMap<Type, ValueParser>();
+        this.primitiveParsers = new HashMap<Type, ValueParser>();
         //this.listParsers = new HashMap<Type, ValueParser.ListParser>();
 
         return;
@@ -34,9 +37,23 @@ public class ParserBundle
 
     public static ParserBundle newDefaultInstance()
     {
-        ParserBundle b = defaultSetup(new ParserBundle());
+        return(
+            defaultSetup(new ParserBundle())
+        );
+    }
 
-        return(b);
+    public ParserBundle setPrimitiveParsers(Map<Type, ValueParser> parsers)
+    {
+        this.primitiveParsers = parsers;
+
+        return(this);
+    }
+
+    public ParserBundle addPrimitiveParser(Type t, ValueParser p)
+    {
+        this.primitiveParsers.put(t, p);
+
+        return(this);
     }
 
     /** As there is no mean for bundle to recognize a List<Type> (excpet iterating the whole map),
@@ -44,54 +61,60 @@ public class ParserBundle
      */
     public static ParserBundle defaultSetup(ParserBundle b)
     {
-        b.primaryParsers.put(String.class       , PrimitiveParsers.StringParser.instance        );
-        b.primaryParsers.put(String[].class     , PrimitiveParsers.StringArrayParser.instance   );
+        b.primitiveParsers.put(String.class       , PrimitiveParsers.StringParser.instance        );
+        b.primitiveParsers.put(String[].class     , PrimitiveParsers.StringArrayParser.instance   );
 
-        b.primaryParsers.put(Byte.class         , PrimitiveParsers.ByteParser.instance          );
-        b.primaryParsers.put(Byte[].class       , PrimitiveParsers.ByteArrayParser.instance     );
+        b.primitiveParsers.put(Byte.class         , PrimitiveParsers.ByteParser.instance          );
+        b.primitiveParsers.put(Byte[].class       , PrimitiveParsers.ByteArrayParser.instance     );
 
-        b.primaryParsers.put(Integer.class      , PrimitiveParsers.IntParser.instance           );
-        b.primaryParsers.put(Integer[].class    , PrimitiveParsers.IntArrayParser.instance      );
+        b.primitiveParsers.put(Integer.class      , PrimitiveParsers.IntParser.instance           );
+        b.primitiveParsers.put(Integer[].class    , PrimitiveParsers.IntArrayParser.instance      );
 
-        b.primaryParsers.put(Long.class         , PrimitiveParsers.LongParser.instance          );
-        b.primaryParsers.put(Long[].class       , PrimitiveParsers.LongArrayParser.instance     );
+        b.primitiveParsers.put(Long.class         , PrimitiveParsers.LongParser.instance          );
+        b.primitiveParsers.put(Long[].class       , PrimitiveParsers.LongArrayParser.instance     );
 
-        b.primaryParsers.put(Float.class        , PrimitiveParsers.FloatParser.instance         );
-        b.primaryParsers.put(Float[].class      , PrimitiveParsers.FloatArrayParser.instance    );
+        b.primitiveParsers.put(Float.class        , PrimitiveParsers.FloatParser.instance         );
+        b.primitiveParsers.put(Float[].class      , PrimitiveParsers.FloatArrayParser.instance    );
 
-        b.primaryParsers.put(Double.class       , PrimitiveParsers.DoubleParser.instance        );
-        b.primaryParsers.put(Double[].class     , PrimitiveParsers.DoubleArrayParser.instance   );
+        b.primitiveParsers.put(Double.class       , PrimitiveParsers.DoubleParser.instance        );
+        b.primitiveParsers.put(Double[].class     , PrimitiveParsers.DoubleArrayParser.instance   );
 
-        b.primaryParsers.put(Boolean.class      , PrimitiveParsers.BooleanParser.instance       );
-        b.primaryParsers.put(Boolean[].class    , PrimitiveParsers.BooleanArrayParser.instance  );
+        b.primitiveParsers.put(Boolean.class      , PrimitiveParsers.BooleanParser.instance       );
+        b.primitiveParsers.put(Boolean[].class    , PrimitiveParsers.BooleanArrayParser.instance  );
 
-        b.primaryParsers.put(Date.class         , PrimitiveParsers.DateParser.instance          );
-        b.primaryParsers.put(Date[].class       , PrimitiveParsers.DateArrayParser.instance     );
+        b.primitiveParsers.put(Date.class         , PrimitiveParsers.DateParser.instance          );
+        b.primitiveParsers.put(Date[].class       , PrimitiveParsers.DateArrayParser.instance     );
 
         return(b);
     }
 
   // VALUE PARSER
+    /**
+     * @param conv Must be a <code>Type</code>.
+     */
     @Override
-    public Object parse(Object v, Type type)
+    public Object parse(Object v, Object conv)
     {
-        ValueParser p = this.primaryParsers.get(type);
+        ValueParser p = this.primitiveParsers.get((Type)conv);
 
         if (p!=null)
-            return(p.parse(v, type));
+            return(p.parse(v, conv));
         else
-            throw(new IllegalArgumentException("No parser is able to parse such type:"+type));
+            throw(new IllegalArgumentException("No parser is able to parse such type:"+conv));
     }
 
+    /**
+     * @param conv Must be a <code>Type</code>.
+     */
     @Override
-    public Object parseString(String v, Type type)
+    public Object parseString(String v, Object conv)
     {
-        ValueParser p = this.primaryParsers.get(type);
+        ValueParser p = this.primitiveParsers.get((Type)conv);
 
         if (p!=null)
-            return(p.parseString(v, type));
+            return(p.parseString(v, conv));
         else
-            throw(new IllegalArgumentException("No parser is able to parse such type:"+type));
+            throw(new IllegalArgumentException("No parser is able to parse such type:"+conv));
     }
 
   // TEST
