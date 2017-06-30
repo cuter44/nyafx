@@ -149,6 +149,13 @@ public class URLBuilder
         return(this);
     }
 
+    public String toURL()
+    {
+        return(
+            this.toString()
+        );
+    }
+
     @Override
     public String toString()
     {

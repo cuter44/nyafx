@@ -133,6 +133,21 @@ public class URLParser
         return(builder.toString());
     }
 
+    @Override
+    public String toString()
+    {
+        try
+        {
+            return(
+                this.toURL()
+            );
+        }
+        catch (UnsupportedEncodingException ex)
+        {
+            throw(new RuntimeException(ex.getMessage(), ex));
+        }
+    }
+
     public static void main(String[] args)
     {
         try
